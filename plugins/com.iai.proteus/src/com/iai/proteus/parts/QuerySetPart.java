@@ -18,65 +18,73 @@ import org.eclipse.e4.core.services.events.IEventBroker;
 import org.eclipse.e4.ui.di.Focus;
 import org.eclipse.e4.ui.di.Persist;
 import org.eclipse.e4.ui.model.application.ui.MDirtyable;
-import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Text;
 
 import com.iai.proteus.events.EventConstants;
+import com.iai.proteus.ui.UIUtil;
 
-public class SamplePart {
+public class QuerySetPart {
 
-	private Text txtInput;
-	private TableViewer tableViewer;
+	// the tab folder object
+	private CTabFolder tabFolder;
+	
+	private Image imgChart;
+	private Image imgMap; 
+	private Image imgQuestion;
 
 	@Inject
 	private IEventBroker eventBroker;
 
 	@Inject
 	private MDirtyable dirty;
-
+	
+	/**
+	 * Constructor 
+	 * 
+	 */
+	public QuerySetPart() {
+		// images
+		imgChart = UIUtil.getImage("icons/fugue/chart.png");
+		imgMap = UIUtil.getImage("icons/fugue/map.png");
+		imgQuestion = UIUtil.getImage("icons/fugue/question-white.png");
+	}
+	
 	@PostConstruct
 	public void createComposite(Composite parent) {
-		parent.setLayout(new GridLayout(1, false));
 
-		txtInput = new Text(parent, SWT.BORDER);
-		txtInput.setMessage("Enter text to mark part as dirty");
-		txtInput.addModifyListener(new ModifyListener() {
+		// dispose listener 
+		parent.addDisposeListener(new DisposeListener() {
 			@Override
-			public void modifyText(ModifyEvent e) {
-				dirty.setDirty(true);
+			public void widgetDisposed(DisposeEvent e) {
+				if (imgChart != null)
+					imgChart.dispose();
+				if (imgMap != null)
+					imgMap.dispose();
+				if (imgQuestion != null)
+					imgQuestion.dispose();
 			}
 		});
-		txtInput.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-
-		tableViewer = new TableViewer(parent);
-
-		tableViewer.add("Sample item 1");
-		tableViewer.add("Sample item 2");
-		tableViewer.add("Sample item 3");
-		tableViewer.add("Sample item 4");
-		tableViewer.add("Sample item 5");
-		tableViewer.getTable().setLayoutData(new GridData(GridData.FILL_BOTH));
 		
-		tableViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			@Override
-			public void selectionChanged(SelectionChangedEvent event) {
-				StructuredSelection structured = (StructuredSelection)event.getSelection();
-				String elmt = (String)structured.getFirstElement();
-				eventBroker.send("viewcommunication/syncEvent", elmt);
-			}
-		});
+		parent.setLayout(new GridLayout(1, false));
+		
+		final Composite composite = new Composite(parent, SWT.NONE);
+		composite.setLayout(new GridLayout());
+		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));		
+
+		tabFolder = new CTabFolder(composite, SWT.BORDER);
+		tabFolder.setSimple(false);
+		tabFolder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
+		
 		
 		Button btn = new Button(parent, SWT.NONE);
 		btn.setText("Test me");
@@ -91,7 +99,7 @@ public class SamplePart {
 
 	@Focus
 	public void setFocus() {
-		tableViewer.getTable().setFocus();
+		
 	}
 
 	@Persist

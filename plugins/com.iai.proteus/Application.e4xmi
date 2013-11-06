@@ -4,7 +4,7 @@
     <children xsi:type="advanced:PerspectiveStack" xmi:id="_de76YEbzEeOuVPJZKUvhmA" selectedElement="_de76YUbzEeOuVPJZKUvhmA">
       <children xsi:type="advanced:Perspective" xmi:id="_de76YUbzEeOuVPJZKUvhmA" elementId="com.iai.proteus.perspective.discover" label="Discover">
         <children xsi:type="basic:PartSashContainer" xmi:id="_de76YkbzEeOuVPJZKUvhmA" selectedElement="_de76ZEbzEeOuVPJZKUvhmA" horizontal="true">
-          <children xsi:type="basic:Part" xmi:id="_de76ZEbzEeOuVPJZKUvhmA" containerData="5000" contributionURI="bundleclass://com.iai.proteus/com.iai.proteus.parts.SamplePart" label="Sample Part"/>
+          <children xsi:type="basic:Part" xmi:id="_de76ZEbzEeOuVPJZKUvhmA" containerData="5000" contributionURI="bundleclass://com.iai.proteus/com.iai.proteus.parts.QuerySetPart" label="Query sets"/>
           <children xsi:type="basic:PartSashContainer" xmi:id="_AGk9gEcREeOYwZVeSI5MZQ" elementId="com.iai.proteus2.partsashcontainer.0" containerData="15000">
             <children xsi:type="basic:Part" xmi:id="_YQwpkEcREeOYwZVeSI5MZQ" elementId="com.iai.proteus2.part.1" contributionURI="bundleclass://com.iai.proteus/com.iai.proteus.parts.GeoBrowserPart" label="GeoBrowser"/>
             <children xsi:type="basic:Part" xmi:id="_WQO8QEcREeOYwZVeSI5MZQ" elementId="com.iai.proteus2.part.0" contributionURI="bundleclass://com.iai.proteus/com.iai.proteus.parts.TimeSeriesPart" label="Time Series"/>
