@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application:Application xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:advanced="http://www.eclipse.org/ui/2010/UIModel/application/ui/advanced" xmlns:application="http://www.eclipse.org/ui/2010/UIModel/application" xmlns:basic="http://www.eclipse.org/ui/2010/UIModel/application/ui/basic" xmlns:menu="http://www.eclipse.org/ui/2010/UIModel/application/ui/menu" xmi:id="_de76QEbzEeOuVPJZKUvhmA" elementId="org.eclipse.e4.ide.application" bindingContexts="_de76SUbzEeOuVPJZKUvhmA">
+  <children xsi:type="basic:TrimmedWindow" xmi:id="_de76QUbzEeOuVPJZKUvhmA" label="com.iai.proteus" width="800" height="600">
+    <children xsi:type="advanced:PerspectiveStack" xmi:id="_de76YEbzEeOuVPJZKUvhmA" selectedElement="_de76YUbzEeOuVPJZKUvhmA">
+      <children xsi:type="advanced:Perspective" xmi:id="_de76YUbzEeOuVPJZKUvhmA" elementId="com.iai.proteus.perspective.discover" label="Discover">
+        <children xsi:type="basic:PartSashContainer" xmi:id="_de76YkbzEeOuVPJZKUvhmA" selectedElement="_de76ZEbzEeOuVPJZKUvhmA" horizontal="true">
+          <children xsi:type="basic:Part" xmi:id="_de76ZEbzEeOuVPJZKUvhmA" containerData="5000" contributionURI="bundleclass://com.iai.proteus/com.iai.proteus.parts.SamplePart" label="Sample Part"/>
+          <children xsi:type="basic:PartSashContainer" xmi:id="_AGk9gEcREeOYwZVeSI5MZQ" elementId="com.iai.proteus2.partsashcontainer.0" containerData="15000">
+            <children xsi:type="basic:Part" xmi:id="_YQwpkEcREeOYwZVeSI5MZQ" elementId="com.iai.proteus2.part.1" contributionURI="bundleclass://com.iai.proteus/com.iai.proteus.parts.GeoBrowserPart" label="GeoBrowser"/>
+            <children xsi:type="basic:Part" xmi:id="_WQO8QEcREeOYwZVeSI5MZQ" elementId="com.iai.proteus2.part.0" contributionURI="bundleclass://com.iai.proteus/com.iai.proteus.parts.TimeSeriesPart" label="Time Series"/>
+          </children>
+        </children>
+      </children>
+      <children xsi:type="advanced:Perspective" xmi:id="_lajtAEbzEeOuVPJZKUvhmA" elementId="com.iai.proteus.perspective.alert" label="Alerts"/>
+    </children>
+    <mainMenu xmi:id="_de76WUbzEeOuVPJZKUvhmA" elementId="menu:org.eclipse.ui.main.menu">
+      <children xsi:type="menu:Menu" xmi:id="_de76WkbzEeOuVPJZKUvhmA" label="File">
+        <children xsi:type="menu:HandledMenuItem" xmi:id="_de76W0bzEeOuVPJZKUvhmA" label="Open" iconURI="platform:/plugin/com.iai.proteus/icons/sample.gif" command="_de76UEbzEeOuVPJZKUvhmA"/>
+        <children xsi:type="menu:HandledMenuItem" xmi:id="_de76XEbzEeOuVPJZKUvhmA" label="Save" iconURI="platform:/plugin/com.iai.proteus/icons/save_edit.gif" command="_de76U0bzEeOuVPJZKUvhmA"/>
+        <children xsi:type="menu:HandledMenuItem" xmi:id="_de76XUbzEeOuVPJZKUvhmA" label="Quit" command="_de76TEbzEeOuVPJZKUvhmA"/>
+        <children xsi:type="menu:HandledMenuItem" xmi:id="_EFIakEcNEeOuVPJZKUvhmA" elementId="com.iai.proteus.handledmenuitem.0" label="Alert Perspective" command="_9NsBoEcMEeOuVPJZKUvhmA"/>
+        <children xsi:type="menu:HandledMenuItem" xmi:id="_f2ucwEcOEeOuVPJZKUvhmA" elementId="com.iai.proteus.handledmenuitem.1" label="Discover Perspective" command="_YoX_sEcOEeOuVPJZKUvhmA"/>
+      </children>
+      <children xsi:type="menu:Menu" xmi:id="_de76XkbzEeOuVPJZKUvhmA" label="Help">
+        <children xsi:type="menu:HandledMenuItem" xmi:id="_de76X0bzEeOuVPJZKUvhmA" label="About" command="_de76VkbzEeOuVPJZKUvhmA"/>
+      </children>
+    </mainMenu>
+    <trimBars xmi:id="_de8hUEbzEeOuVPJZKUvhmA">
+      <children xsi:type="menu:ToolBar" xmi:id="_de8hUUbzEeOuVPJZKUvhmA" elementId="toolbar:org.eclipse.ui.main.toolbar">
+        <children xsi:type="menu:HandledToolItem" xmi:id="_de8hUkbzEeOuVPJZKUvhmA" iconURI="platform:/plugin/com.iai.proteus/icons/sample.gif" command="_de76UEbzEeOuVPJZKUvhmA"/>
+        <children xsi:type="menu:HandledToolItem" xmi:id="_de8hU0bzEeOuVPJZKUvhmA" iconURI="platform:/plugin/com.iai.proteus/icons/save_edit.gif" command="_de76U0bzEeOuVPJZKUvhmA"/>
+      </children>
+    </trimBars>
+  </children>
+  <handlers xmi:id="_de76TUbzEeOuVPJZKUvhmA" elementId="com.iai.proteus.handler.quitCommand" contributionURI="bundleclass://com.iai.proteus/com.iai.proteus.handlers.QuitHandler" command="_de76TEbzEeOuVPJZKUvhmA"/>
+  <handlers xmi:id="_de76UUbzEeOuVPJZKUvhmA" elementId="com.iai.proteus.handler.openCommand" contributionURI="bundleclass://com.iai.proteus/com.iai.proteus.handlers.OpenHandler" command="_de76UEbzEeOuVPJZKUvhmA"/>
+  <handlers xmi:id="_de76VEbzEeOuVPJZKUvhmA" elementId="com.iai.proteus.handler.saveCommand" contributionURI="bundleclass://com.iai.proteus/com.iai.proteus.handlers.SaveHandler" command="_de76U0bzEeOuVPJZKUvhmA"/>
+  <handlers xmi:id="_de76V0bzEeOuVPJZKUvhmA" elementId="com.iai.proteus.handler.aboutCommand" contributionURI="bundleclass://com.iai.proteus/com.iai.proteus.handlers.AboutHandler" command="_de76VkbzEeOuVPJZKUvhmA"/>
+  <handlers xmi:id="_5ErIYEcNEeOuVPJZKUvhmA" elementId="com.iai.proteus.handler.alertPerspectiveCommand" contributionURI="bundleclass://com.iai.proteus/com.iai.proteus.handlers.AlertPerspectiveHandler" command="_9NsBoEcMEeOuVPJZKUvhmA"/>
+  <handlers xmi:id="_V-nvMEcOEeOuVPJZKUvhmA" elementId="com.iai.proteus.handler.discoverPerspectiveCommand" contributionURI="bundleclass://com.iai.proteus/com.iai.proteus.handlers.DiscoverPerspectiveHandler" command="_YoX_sEcOEeOuVPJZKUvhmA"/>
+  <bindingTables xmi:id="_de76TkbzEeOuVPJZKUvhmA" bindingContext="_de76SUbzEeOuVPJZKUvhmA">
+    <bindings xmi:id="_de76T0bzEeOuVPJZKUvhmA" keySequence="M1+Q" command="_de76TEbzEeOuVPJZKUvhmA"/>
+    <bindings xmi:id="_de76UkbzEeOuVPJZKUvhmA" keySequence="M1+O" command="_de76UEbzEeOuVPJZKUvhmA"/>
+    <bindings xmi:id="_de76VUbzEeOuVPJZKUvhmA" keySequence="M1+S" command="_de76U0bzEeOuVPJZKUvhmA"/>
+    <bindings xmi:id="_de76WEbzEeOuVPJZKUvhmA" keySequence="M1+A" command="_de76VkbzEeOuVPJZKUvhmA"/>
+  </bindingTables>
+  <rootContext xmi:id="_de76SUbzEeOuVPJZKUvhmA" elementId="org.eclipse.ui.contexts.dialogAndWindow" name="In Dialog and Windows">
+    <children xmi:id="_de76SkbzEeOuVPJZKUvhmA" elementId="org.eclipse.ui.contexts.window" name="In Windows"/>
+    <children xmi:id="_de76S0bzEeOuVPJZKUvhmA" elementId="org.eclipse.ui.contexts.dialog" name="In Dialogs"/>
+  </rootContext>
+  <commands xmi:id="_de76TEbzEeOuVPJZKUvhmA" elementId="org.eclipse.ui.file.exit" commandName="quitCommand"/>
+  <commands xmi:id="_de76UEbzEeOuVPJZKUvhmA" elementId="com.iai.proteus.open" commandName="openCommand"/>
+  <commands xmi:id="_de76U0bzEeOuVPJZKUvhmA" elementId="org.eclipse.ui.file.save" commandName="saveCommand"/>
+  <commands xmi:id="_de76VkbzEeOuVPJZKUvhmA" elementId="org.eclipse.ui.help.aboutAction" commandName="aboutCommand"/>
+  <commands xmi:id="_9NsBoEcMEeOuVPJZKUvhmA" elementId="com.iai.proteus.command.alert.perspective" commandName="alertPerspectiveCommand"/>
+  <commands xmi:id="_YoX_sEcOEeOuVPJZKUvhmA" elementId="com.iai.proteus.command.discoverPerspectiveCommand" commandName="discoverPerspectiveCommand"/>
+  <addons xmi:id="_de76QkbzEeOuVPJZKUvhmA" elementId="org.eclipse.e4.core.commands.service" contributionURI="bundleclass://org.eclipse.e4.core.commands/org.eclipse.e4.core.commands.CommandServiceAddon"/>
+  <addons xmi:id="_de76Q0bzEeOuVPJZKUvhmA" elementId="org.eclipse.e4.ui.contexts.service" contributionURI="bundleclass://org.eclipse.e4.ui.services/org.eclipse.e4.ui.services.ContextServiceAddon"/>
+  <addons xmi:id="_de76REbzEeOuVPJZKUvhmA" elementId="org.eclipse.e4.ui.bindings.service" contributionURI="bundleclass://org.eclipse.e4.ui.bindings/org.eclipse.e4.ui.bindings.BindingServiceAddon"/>
+  <addons xmi:id="_de76RUbzEeOuVPJZKUvhmA" elementId="org.eclipse.e4.ui.workbench.commands.model" contributionURI="bundleclass://org.eclipse.e4.ui.workbench/org.eclipse.e4.ui.internal.workbench.addons.CommandProcessingAddon"/>
+  <addons xmi:id="_de76RkbzEeOuVPJZKUvhmA" elementId="org.eclipse.e4.ui.workbench.handler.model" contributionURI="bundleclass://org.eclipse.e4.ui.workbench/org.eclipse.e4.ui.internal.workbench.addons.HandlerProcessingAddon"/>
+  <addons xmi:id="_de76R0bzEeOuVPJZKUvhmA" elementId="org.eclipse.e4.ui.workbench.contexts.model" contributionURI="bundleclass://org.eclipse.e4.ui.workbench/org.eclipse.e4.ui.internal.workbench.addons.ContextProcessingAddon"/>
+  <addons xmi:id="_de76SEbzEeOuVPJZKUvhmA" elementId="org.eclipse.e4.ui.workbench.bindings.model" contributionURI="bundleclass://org.eclipse.e4.ui.workbench.swt/org.eclipse.e4.ui.workbench.swt.util.BindingProcessingAddon"/>
+</application:Application>
