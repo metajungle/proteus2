@@ -1,0 +1,11 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Proteus Model
+Bundle-SymbolicName: com.iai.proteus.model
+Bundle-Version: 1.0.0.qualifier
+Bundle-Vendor: IAI
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Export-Package: com.iai.proteus.model,
+ com.iai.proteus.model.event,
+ com.iai.proteus.model.map,
+ com.iai.proteus.model.services

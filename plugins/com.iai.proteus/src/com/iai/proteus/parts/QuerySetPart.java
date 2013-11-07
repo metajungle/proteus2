@@ -20,6 +20,7 @@ import org.eclipse.e4.ui.di.Persist;
 import org.eclipse.e4.ui.model.application.ui.MDirtyable;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -29,8 +30,11 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Text;
 
 import com.iai.proteus.events.EventConstants;
+import com.iai.proteus.ui.QuerySetTabOld;
+import com.iai.proteus.ui.QuerySetTab;
 import com.iai.proteus.ui.UIUtil;
 
 public class QuerySetPart {
@@ -81,20 +85,37 @@ public class QuerySetPart {
 		composite.setLayout(new GridLayout());
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));		
 
-		tabFolder = new CTabFolder(composite, SWT.BORDER);
-		tabFolder.setSimple(false);
-		tabFolder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
+		QuerySetTab querySet = new QuerySetTab(composite);
+		Composite master = querySet.getMaster();
+		master.setLayoutData(new GridData(GridData.FILL_BOTH));		
 		
 		
-		Button btn = new Button(parent, SWT.NONE);
-		btn.setText("Test me");
-		btn.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		btn.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				eventBroker.send(EventConstants.EVENT, "Hello!");
-			}
-		});
+//		tabFolder = new CTabFolder(composite, SWT.BORDER);
+//		tabFolder.setSimple(false);
+//		tabFolder.setLayoutData(new GridData(GridData.FILL_BOTH));
+//		
+//		// create a new tab 
+//		CTabItem item = new CTabItem(tabFolder, SWT.CLOSE);
+//		item.setText("Item 0");
+//
+//		QuerySetTab2 querySet = new QuerySetTab2(tabFolder);
+//		
+//		Composite master = querySet.getMaster();
+//		master.setLayoutData(new GridData(GridData.FILL_BOTH));
+//		
+//		item.setControl(master);
+//
+//		tabFolder.setSelection(item);
+//		
+//		Button btn = new Button(parent, SWT.NONE);
+//		btn.setText("Test me");
+//		btn.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+//		btn.addSelectionListener(new SelectionAdapter() {
+//			@Override
+//			public void widgetSelected(SelectionEvent e) {
+//				eventBroker.send(EventConstants.EVENT, "Hello!");
+//			}
+//		});
 	}
 
 	@Focus

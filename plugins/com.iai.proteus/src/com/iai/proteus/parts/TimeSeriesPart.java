@@ -11,6 +11,8 @@
  *******************************************************************************/
 package com.iai.proteus.parts;
 
+import java.awt.Color;
+
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
@@ -25,6 +27,7 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.experimental.chart.swt.ChartComposite;
+import org.jfree.experimental.swt.SWTUtils;
 
 import com.iai.proteus.events.EventConstants;
 
@@ -40,6 +43,9 @@ public class TimeSeriesPart {
 				ChartFactory.createTimeSeriesChart("", "", "",
 						datasetTimeSeries, true, true, false);
 
+		Color colorBg = SWTUtils.toAwtColor(parent.getBackground());
+		chartTimeSeries.setBackgroundPaint(colorBg);
+		
 //		// GUI: an SWT composite on top
 //		Composite top = new Composite(parent, SWT.EMBEDDED);
 //		top.setLayoutData(new GridData(GridData.FILL_BOTH));
