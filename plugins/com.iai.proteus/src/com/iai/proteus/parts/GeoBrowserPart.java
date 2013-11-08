@@ -22,19 +22,38 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
 import org.eclipse.e4.core.di.annotations.Optional;
-import org.eclipse.e4.core.services.events.IEventBroker;
 import org.eclipse.e4.ui.di.Focus;
 import org.eclipse.e4.ui.di.UIEventTopic;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.awt.SWT_AWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.ToolBar;
+import org.eclipse.swt.widgets.ToolItem;
+
+import com.iai.proteus.ui.UIUtil;
 
 
 public class GeoBrowserPart {
 	
 	final static WorldWindowGLCanvas world = new WorldWindowGLCanvas();
+	
+	private Image imgSectorSelect;
+	private Image imgSectorClear;
+
+
+	/**
+	 * Constructor 
+	 * 
+	 */
+	public GeoBrowserPart() {
+		imgSectorSelect = UIUtil.getImage("resources/icons/fugue/zone--plus.png");
+		imgSectorClear = UIUtil.getImage("resources/icons/fugue/zone--minus.png");
+	}
 
 	/**
 	 * Initialize the default WW layers
@@ -46,7 +65,29 @@ public class GeoBrowserPart {
 	@PostConstruct
 	public void createComposite(Composite parent) {
 		
-		parent.setLayout(new GridLayout(1, false));
+		parent.addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e) {
+				if (imgSectorSelect != null) {
+					imgSectorSelect.dispose();
+				}
+				if (imgSectorClear != null) {
+					imgSectorClear.dispose();
+				}
+			}
+		});
+		
+		parent.setLayout(new GridLayout(1, true));
+		
+		ToolBar toolBar = new ToolBar(parent, SWT.FLAT | SWT.WRAP | SWT.RIGHT);
+		
+		ToolItem tltmSelectRegion = new ToolItem(toolBar, SWT.NONE);
+		tltmSelectRegion.setText("Select region");
+		tltmSelectRegion.setImage(imgSectorSelect);
+		
+		ToolItem tltmClearRegion = new ToolItem(toolBar, SWT.NONE);
+		tltmClearRegion.setText("Clear region");
+		tltmClearRegion.setImage(imgSectorClear);
 		
 		// GUI: an SWT composite on top
 		Composite top = new Composite(parent, SWT.EMBEDDED);

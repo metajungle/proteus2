@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
+	<classpathentry exported="true" kind="lib" path="lib/gson-2.2.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/javaxt-gis.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/javaxt-rss.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/jcommon-1.0.21.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/jfreechart-1.0.16-experimental.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/jfreechart-1.0.16-swt.jar"/>

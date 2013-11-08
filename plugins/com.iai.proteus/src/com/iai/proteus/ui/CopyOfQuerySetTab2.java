@@ -92,6 +92,9 @@ import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.swt.widgets.Widget;
+import org.eclipse.ui.IPageLayout;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.FilteredTree;
 import org.eclipse.ui.dialogs.PatternFilter;
 import org.eclipse.wb.swt.old.SWTResourceManager;
@@ -138,7 +141,7 @@ import com.iai.proteus.queryset.TimeFacet;
  * @author Jakob Henriksson
  *
  */
-public class QuerySetTab implements MapIdentifier, ServiceManager {
+public class CopyOfQuerySetTab2 implements MapIdentifier, ServiceManager {
 
 	private Composite parent;
 	
@@ -382,7 +385,7 @@ public class QuerySetTab implements MapIdentifier, ServiceManager {
 	 * @param style
 	 */
 	@SuppressWarnings("serial")
-	public QuerySetTab(Composite parent)
+	public CopyOfQuerySetTab2(Composite parent)
 	{
 		this.parent = parent;
 		
@@ -418,29 +421,29 @@ public class QuerySetTab implements MapIdentifier, ServiceManager {
 		/*
 		 * Resources
 		 */
-		imgDocument = UIUtil.getImage("resources/icons/fugue/document.png");
-		imgSectorSelection = UIUtil.getImage("resources/icons/fugue/zone--plus.png");
-		imgSectorClear = UIUtil.getImage("resources/icons/fugue/zone--minus.png");
-		imgMagnifier = UIUtil.getImage("resources/icons/fugue/magnifier.png");
-		imgChart = UIUtil.getImage("resources/icons/fugue/chart.png");
-		imgMap = UIUtil.getImage("resources/icons/fugue/map.png");
-		imgDatabase = UIUtil.getImage("resources/icons/fugue/database.png");
-		imgDatabaseExport = UIUtil.getImage("resources/icons/fugue/database-export.png");
-		imgDelete = UIUtil.getImage("resources/icons/fugue/minus-button.png");
-		imgClear = UIUtil.getImage("resources/icons/fugue/cross-button.png");
-		imgSave = UIUtil.getImage("resources/icons/fugue/disk-black.png");
-		imgRefresh = UIUtil.getImage("resources/icons/fugue/arrow-circle-double-135.png");
-		imgDotRed = UIUtil.getImage("resources/icons/dot-red.png");
-		imgDotGreen = UIUtil.getImage("resources/icons/dot-green.png");
-		imgAddMap = UIUtil.getImage("resources/icons/fugue/map--plus.png");
-		imgBackControl = UIUtil.getImage("resources/icons/fugue/navigation-180-button.png");
-		imgQuestion = UIUtil.getImage("resources/icons/fugue/question-white.png");
-		imgAdd = UIUtil.getImage("resources/icons/fugue/plus-button.png");
-		imgArrowUp = UIUtil.getImage("resources/icons/fugue/arrow-090.png");
-		imgArrowDown = UIUtil.getImage("resources/icons/fugue/arrow-270.png");
-		imgColor = UIUtil.getImage("resources/icons/fugue/color.png");
-		imgEye = UIUtil.getImage("resources/icons/fugue/eye.png");
-		imgEyeHalf = UIUtil.getImage("resources/icons/fugue/eye-half.png");
+		imgDocument = UIUtil.getImage("icons/fugue/document.png");
+		imgSectorSelection = UIUtil.getImage("icons/fugue/zone--plus.png");
+		imgSectorClear = UIUtil.getImage("icons/fugue/zone--minus.png");
+		imgMagnifier = UIUtil.getImage("icons/fugue/magnifier.png");
+		imgChart = UIUtil.getImage("icons/fugue/chart.png");
+		imgMap = UIUtil.getImage("icons/fugue/map.png");
+		imgDatabase = UIUtil.getImage("icons/fugue/database.png");
+		imgDatabaseExport = UIUtil.getImage("icons/fugue/database-export.png");
+		imgDelete = UIUtil.getImage("icons/fugue/minus-button.png");
+		imgClear = UIUtil.getImage("icons/fugue/cross-button.png");
+		imgSave = UIUtil.getImage("icons/fugue/disk-black.png");
+		imgRefresh = UIUtil.getImage("icons/fugue/arrow-circle-double-135.png");
+		imgDotRed = UIUtil.getImage("icons/dot-red.png");
+		imgDotGreen = UIUtil.getImage("icons/dot-green.png");
+		imgAddMap = UIUtil.getImage("icons/fugue/map--plus.png");
+		imgBackControl = UIUtil.getImage("icons/fugue/navigation-180-button.png");
+		imgQuestion = UIUtil.getImage("icons/fugue/question-white.png");
+		imgAdd = UIUtil.getImage("icons/fugue/plus-button.png");
+		imgArrowUp = UIUtil.getImage("icons/fugue/arrow-090.png");
+		imgArrowDown = UIUtil.getImage("icons/fugue/arrow-270.png");
+		imgColor = UIUtil.getImage("icons/fugue/color.png");
+		imgEye = UIUtil.getImage("icons/fugue/eye.png");
+		imgEyeHalf = UIUtil.getImage("icons/fugue/eye-half.png");
 		
 		fontActive = SWTResourceManager.getFont("Lucida Grande", 10, SWT.BOLD | SWT.ITALIC);
 		fontInactive = SWTResourceManager.getFont("Lucida Grande", 10, SWT.NORMAL);
@@ -1137,15 +1140,15 @@ public class QuerySetTab implements MapIdentifier, ServiceManager {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
 //				// create the help controller 
-				SwtUtil.createHelpController(stackProperties, 
-						tltmPropertiesHelp, compositePropertiesToolbar,
-						"With 'Mode' checked, sensor offerings will only be " + 
-						"shown when some observed property is selected. " + 
-						"If mulitple properties are selected, " + 
-						"the union will be shown. \n\n" + 
-						"If 'Mode' is unchecked, all " +
-						"sensor offerings will be shown if no selection is made." + 
-						"");
+//				SwtUtil.createHelpController(stackProperties, 
+//						tltmPropertiesHelp, compositePropertiesToolbar,
+//						"With 'Mode' checked, sensor offerings will only be " + 
+//						"shown when some observed property is selected. " + 
+//						"If mulitple properties are selected, " + 
+//						"the union will be shown. \n\n" + 
+//						"If 'Mode' is unchecked, all " +
+//						"sensor offerings will be shown if no selection is made." + 
+//						"");
 			}
 		});		
 
@@ -1859,7 +1862,7 @@ public class QuerySetTab implements MapIdentifier, ServiceManager {
 		final Button btnContour = new Button(compositePlotTypes, SWT.TOGGLE | SWT.WRAP);
 		btnContour.setSelection(false);
 		btnContour.setText("Contour\nplot");
-		btnContour.setImage(UIUtil.getImage("resources/icons/fugue/spectrum.png"));
+		btnContour.setImage(UIUtil.getImage("icons/fugue/spectrum.png"));
 		gridData = new GridData(SWT.NONE, SWT.FILL, false, true);
 		gridData.heightHint = 38;
 		// TODO: should be included when supported 
@@ -1947,7 +1950,7 @@ public class QuerySetTab implements MapIdentifier, ServiceManager {
 		btnUpdatePreview = new Button(compositePlotPreviewDetails, SWT.CENTER);
 		btnUpdatePreview.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		btnUpdatePreview.setText("Update preview");
-		btnUpdatePreview.setImage(UIUtil.getImage("resources/icons/fugue/chart.png"));
+		btnUpdatePreview.setImage(UIUtil.getImage("icons/fugue/chart.png"));
 
 		btnUpdatePreview.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -2663,7 +2666,7 @@ public class QuerySetTab implements MapIdentifier, ServiceManager {
 		});
 		
 		PatternFilter filter = new PatternFilter() {
-			@Override
+//			@Override
 			protected boolean isLeafMatch(final Viewer viewer, final Object element) {
 				TreeViewer treeViewer = (TreeViewer) viewer;
 				int numberOfColumns = treeViewer.getTree().getColumnCount();

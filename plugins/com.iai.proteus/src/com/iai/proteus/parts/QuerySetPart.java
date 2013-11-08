@@ -14,9 +14,11 @@ package com.iai.proteus.parts;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
+import org.eclipse.e4.core.di.annotations.Optional;
 import org.eclipse.e4.core.services.events.IEventBroker;
 import org.eclipse.e4.ui.di.Focus;
 import org.eclipse.e4.ui.di.Persist;
+import org.eclipse.e4.ui.di.UIEventTopic;
 import org.eclipse.e4.ui.model.application.ui.MDirtyable;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
@@ -58,9 +60,9 @@ public class QuerySetPart {
 	 */
 	public QuerySetPart() {
 		// images
-		imgChart = UIUtil.getImage("icons/fugue/chart.png");
-		imgMap = UIUtil.getImage("icons/fugue/map.png");
-		imgQuestion = UIUtil.getImage("icons/fugue/question-white.png");
+		imgChart = UIUtil.getImage("resources/icons/fugue/chart.png");
+		imgMap = UIUtil.getImage("resources/icons/fugue/map.png");
+		imgQuestion = UIUtil.getImage("resources/icons/fugue/question-white.png");
 	}
 	
 	@PostConstruct
@@ -117,7 +119,17 @@ public class QuerySetPart {
 //			}
 //		});
 	}
-
+	
+	@Inject
+	@Optional
+	void receiveEvent(@UIEventTopic(EventConstants.EVENT_GEO_BBOX_UPDATED) String elmt) {
+		if (elmt.equals("")) {
+			System.out.println("Region cleared");
+		} else {
+			System.out.println("Region updated: " + elmt);
+		}
+	}	
+	
 	@Focus
 	public void setFocus() {
 		
