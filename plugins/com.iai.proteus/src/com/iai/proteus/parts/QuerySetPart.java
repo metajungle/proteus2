@@ -31,6 +31,7 @@ import org.eclipse.e4.ui.di.Focus;
 import org.eclipse.e4.ui.di.Persist;
 import org.eclipse.e4.ui.di.UIEventTopic;
 import org.eclipse.e4.ui.model.application.ui.MDirtyable;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -113,6 +114,7 @@ import com.iai.proteus.common.sos.SupportedResponseFormats;
 import com.iai.proteus.common.sos.data.Field;
 import com.iai.proteus.common.sos.model.SensorOffering;
 import com.iai.proteus.common.sos.util.SosUtil;
+import com.iai.proteus.dialogs.ManageQuerySetServicesDialog;
 import com.iai.proteus.events.EventConstants;
 import com.iai.proteus.model.MapId;
 import com.iai.proteus.model.SensorOfferingLayer;
@@ -563,35 +565,13 @@ public class QuerySetPart implements MapIdentifier, ServiceManager {
 	
 
 	/**
-	 * Returns the unique ID 
-	 * 
-	 * @return the uuid
-	 */
-	public String getUuid() {
-		return uuid;
-	}
-
-	/**
-	 * Sets the unique ID 
-	 * 
-	 * @param uuid the uuid to set
-	 */
-	public void setUuid(String uuid) {
-		this.uuid = uuid;
-	}
-
-	public Composite getMaster() {
-		return compositeOuterStack;
-	}
-	
-	/**
 	 * Create a new tab
 	 *
 	 * @param parent
 	 */
 	@PostConstruct 
-	private void createComposite(Composite parent) {
-
+	private void createComposite(final Composite parent) {
+		
 		// dispose listener 
 		parent.addDisposeListener(new DisposeListener() {
 			@Override
@@ -800,22 +780,22 @@ public class QuerySetPart implements MapIdentifier, ServiceManager {
 		final ToolBar toolBarServices = new ToolBar(compositeToolbar, SWT.FLAT | SWT.RIGHT);
 		toolBarServices.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false));
 
-		ToolItem itemServicesManage = new ToolItem(toolBarServices, SWT.NONE);
-		itemServicesManage.setText("Add...");
-		itemServicesManage.setImage(imgAdd);
+		ToolItem itemServicesManager = new ToolItem(toolBarServices, SWT.NONE);
+		itemServicesManager.setText("Add...");
+		itemServicesManager.setImage(imgAdd);
 		// manage services listener
-		itemServicesManage.addSelectionListener(new SelectionAdapter() {
+		itemServicesManager.addSelectionListener(new SelectionAdapter() {
 			
 			@SuppressWarnings("serial")
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				// create and open dialog to manage services 
-//				ManageQuerySetServicesDialog dialog = 
-//						new ManageQuerySetServicesDialog(site.getShell(), 
-//								QuerySetTab.this, ServiceType.SOS);
-//				if (dialog.open() == IDialogConstants.OK_ID) {
-//					
-//					// toggle layers - send event
+				ManageQuerySetServicesDialog dialog = 
+						new ManageQuerySetServicesDialog(parent.getShell(), 
+								QuerySetPart.this, ServiceType.SOS);
+				if (dialog.open() == IDialogConstants.OK_ID) {
+					
+					// toggle layers - send event
 //					eventAdminService.sendEvent(new Event(EventTopic.QS_TOGGLE_SERVICES.toString(), 
 //							new HashMap<String, Object>() { 
 //						{
@@ -823,24 +803,24 @@ public class QuerySetPart implements MapIdentifier, ServiceManager {
 //							put("value", getServices());
 //						}
 //					}));
-//					
-//					// count active services 
-//					int countActiveServices = 0;
-//					for (Service service : getServices()) 
-//						countActiveServices += service.isActive() ? 1 : 0;
-//					// update live services tile
-//					updateLiveTileServices(countActiveServices);				
-//
-//					// refresh viewer as input might have changed 
-//					tableViewerSosServices.refresh();
-//					
-//					// mark as dirty
-//					setDirty(true);
-//
-//					// TODO: need to update layers as layers might have been 
-//					//       deleted
-//				}
-//				dialog.close();
+					
+					// count active services 
+					int countActiveServices = 0;
+					for (Service service : getServices()) 
+						countActiveServices += service.isActive() ? 1 : 0;
+					// update live services tile
+					updateLiveTileServices(countActiveServices);				
+
+					// refresh viewer as input might have changed 
+					tableViewerSosServices.refresh();
+					
+					// mark as dirty
+					setDirty(true);
+
+					// TODO: need to update layers as layers might have been 
+					//       deleted
+				}
+				dialog.close();
 			}
 		});
 		
@@ -955,7 +935,7 @@ public class QuerySetPart implements MapIdentifier, ServiceManager {
 		tableViewerSosServices = createServiceTableViewer(stackServices);
 		
 		tableServices = tableViewerSosServices.getTable();
-		tableServices.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
+		tableServices.setLayoutData(new GridData(GridData.FILL_BOTH));
 		tableServices.setHeaderVisible(true);
 		tableServices.setLinesVisible(false);
 		
@@ -2783,7 +2763,26 @@ public class QuerySetPart implements MapIdentifier, ServiceManager {
 	@Persist
 	public void save() {
 		dirty.setDirty(false);
-	}	
+	}
+	
+	/**
+	 * Returns the unique ID 
+	 * 
+	 * @return the uuid
+	 */
+	public String getUuid() {
+		return uuid;
+	}
+
+	/**
+	 * Sets the unique ID 
+	 * 
+	 * @param uuid the uuid to set
+	 */
+	public void setUuid(String uuid) {
+		this.uuid = uuid;
+	}
+
 	
 	/**
 	 * Activates and shows the sensor stack item 
@@ -2945,6 +2944,9 @@ public class QuerySetPart implements MapIdentifier, ServiceManager {
 		for (Service service : getServices()) 
 			countActiveServices += (service.isActive() ? 1 : 0);
 
+		// TODO: update the offerings that should be displayed 
+		// TODO: notify the geo-browser of changes in what should be displayed 
+		
 		// active services might have changed - send event
 //		eventAdminService.sendEvent(new Event(EventTopic.QS_TOGGLE_SERVICES.toString(), 
 //				new HashMap<String, Object>() { 
