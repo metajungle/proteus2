@@ -40,8 +40,10 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.e4.core.di.annotations.Optional;
 import org.eclipse.e4.core.services.events.IEventBroker;
 import org.eclipse.e4.ui.di.Focus;
+import org.eclipse.e4.ui.di.UIEventTopic;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.awt.SWT_AWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -77,6 +79,7 @@ import com.iai.proteus.model.services.Service;
 import com.iai.proteus.queryset.Facet;
 import com.iai.proteus.queryset.FacetChangeToggle;
 import com.iai.proteus.queryset.RearrangeMapsEventValue;
+import com.iai.proteus.queryset.SensorOfferingItem;
 import com.iai.proteus.queryset.SosOfferingLayer;
 import com.iai.proteus.ui.UIUtil;
 
@@ -95,8 +98,6 @@ public class WorldWindView implements SelectListener, PropertyChangeListener {
 
 	public static final String ID = "com.iai.proteus.view.WorldWindView";
 
-//	private SwingControl swingControl = null;
-
 	private Image imgSectorSelect;
 	private Image imgSectorClear;
 	
@@ -109,6 +110,8 @@ public class WorldWindView implements SelectListener, PropertyChangeListener {
 	 */
 	private SectorSelector selector;
 	private Sector latestUserSelection;
+	
+	private RenderableLayer offeringsLayer = new RenderableLayer(); 
 
 
     // the ToolTipController can be used to show a tool tip over markers and such
@@ -143,6 +146,8 @@ public class WorldWindView implements SelectListener, PropertyChangeListener {
 
 		// initialize sector selector 
 		initializeSectorSelection();
+		
+		getWwd().getModel().getLayers().add(offeringsLayer);
 
 		this.toolTipController =
 				new ToolTipController(this.getWwd(), AVKey.DISPLAY_NAME, null);
@@ -284,16 +289,16 @@ public class WorldWindView implements SelectListener, PropertyChangeListener {
 				}
 
 				// convert to our marker object
-				SensorOfferingMarker marker =
-						((SensorOfferingMarker) picked.getObject());
+				SensorOfferingMarker marker = 
+						(SensorOfferingMarker) picked.getObject();
 
 				// populate selection object
 				final MarkerSelection selection = new MarkerSelection();
 				selection.add(marker);
 
 				// notify listeners of selection
-				SelectionNotifier.getInstance().selectionChanged(selection);
-
+				// TODO: implement 
+//				SelectionNotifier.getInstance().selectionChanged(selection);
 			}
 		}
 	}
@@ -393,15 +398,16 @@ public class WorldWindView implements SelectListener, PropertyChangeListener {
 	 */
 	private SosOfferingLayer initializeOfferingsLayer(MapId mapId) {
 		// create layer 
-		SosOfferingLayer layer =
-				new SosOfferingLayer(getWwd(),
-						createSectorSelector(), mapId);
-		// associate ID with layer 
-		layer.setValue(MapAVKey.MAP_ID, mapId.toString());
-		// add marker layer to World Wind
-		getWwd().getModel().getLayers().add(layer);
-		log.info("Initialized sensor offerings layer: " + mapId);
-		return layer;
+//		SosOfferingLayer layer =
+//				new SosOfferingLayer(getWwd(),
+//						createSectorSelector(), mapId);
+//		// associate ID with layer 
+//		layer.setValue(MapAVKey.MAP_ID, mapId.toString());
+//		// add marker layer to World Wind
+//		getWwd().getModel().getLayers().add(layer);
+//		log.info("Initialized sensor offerings layer: " + mapId);
+//		return layer;
+		return null;
 	}
 	
 
@@ -695,7 +701,7 @@ public class WorldWindView implements SelectListener, PropertyChangeListener {
 		selector.removePropertyChangeListener(this);
 		selector.disable();
 		// send update 
-		eventBroker.post(EventConstants.EVENT_GEO_BBOX_UPDATED, "");
+		eventBroker.post(EventConstants.EVENT_GEO_BBOX_CLEARED, "");
 	}
 	
 	/**
@@ -719,8 +725,7 @@ public class WorldWindView implements SelectListener, PropertyChangeListener {
 						!latestUserSelection.equals(oldSector))	{
 
 					// send update 
-					eventBroker.post(EventConstants.EVENT_GEO_BBOX_UPDATED, 
-							"" + oldSector.toString());
+					eventBroker.post(EventConstants.EVENT_GEO_BBOX_UPDATED, oldSector); 
 
 					log.trace("Updating contributions from propertyChange()");
 				}
@@ -730,6 +735,17 @@ public class WorldWindView implements SelectListener, PropertyChangeListener {
 			}
 		}
 	}	
+	
+	@Inject
+	@Optional
+	void receiveEvent(@UIEventTopic(EventConstants.EVENT_GEO_OFFERINGS_UPDATE) Collection<SensorOfferingItem> items) {
+		System.out.println("Items: " + items.size());
+		
+		List<Renderable> markers = WorldWindUtils.getCapabilitiesMarkers(items);
+		
+		offeringsLayer.setRenderables(markers);
+	}	
+	
 	
 	/**
 	 * Sets the geographical selection in a @{link SosOfferingLayer}

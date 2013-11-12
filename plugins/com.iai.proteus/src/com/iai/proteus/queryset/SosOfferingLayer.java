@@ -49,9 +49,9 @@ public class SosOfferingLayer extends RenderableLayer
 {
 
 	private static final Logger log =
-		Logger.getLogger(SosOfferingLayer.class);
-	
-	// EventAdmin service for communicating with other views/modules
+			Logger.getLogger(SosOfferingLayer.class);
+		
+//	// EventAdmin service for communicating with other views/modules
 //	private EventAdmin eventAdminService;
 
 	private WorldWindow world;
@@ -90,9 +90,7 @@ public class SosOfferingLayer extends RenderableLayer
 	 * @param selector
 	 * @param mapId
 	 */
-	public SosOfferingLayer(WorldWindow worldWindow, SectorSelector selector,
-			MapId mapId)
-	{
+	public SosOfferingLayer(WorldWindow worldWindow) {
 
 		if (worldWindow == null) {
 			String msg = "World window object was null";
@@ -100,24 +98,9 @@ public class SosOfferingLayer extends RenderableLayer
 			throw new IllegalArgumentException(msg);
 		}
 
-		if (selector == null) {
-			String msg = "Sector selector object was null";
-			log.error(msg);
-			throw new IllegalArgumentException(msg);
-		}
-
-		if (mapId == null) {
-			String msg = "Map ID was null";
-			log.error(msg);
-			throw new IllegalArgumentException(msg);
-		}
-
 		this.world = worldWindow;
-		this.selector = selector;
-		this.mapId = mapId;
 		
 		// default 
-		active = false;
 		displayStrategy = FacetDisplayStrategy.SHOW_ALL;
 
 		// selection layer
@@ -129,7 +112,7 @@ public class SosOfferingLayer extends RenderableLayer
 		markersInitialized = false;
 		facets = new HashSet<FacetChangeToggle>();
 
-		setName(mapId.toString());
+		setName("Sensor Offering Layer");
 	}
 
 	/**

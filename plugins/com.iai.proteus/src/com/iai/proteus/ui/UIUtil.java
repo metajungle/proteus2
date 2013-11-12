@@ -163,14 +163,14 @@ public class UIUtil {
 		MessageDialog.openInformation(shell, title, msg);
 	}	
 
-	/**
-	 *
-	 * @return
-	 */
-	public static Shell getShell() {
-		return PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
-	}
-
+//	/**
+//	 *
+//	 * @return
+//	 */
+//	public static Shell getShell() {
+//		return PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+//	}
+//
 	/**
 	 * Returns an image from the specified location
 	 *
@@ -225,6 +225,36 @@ public class UIUtil {
 	public static Color colorFromRGB(RGB rgb) {
 		return new Color(rgb.red, rgb.green, rgb.blue);
 	}
+	
+	
+	/**
+	 * Converts the color to a regular hex string 
+	 * 
+	 * @param color
+	 * @return
+	 */
+	public static String colorToHexString(Color color) {
+		return String.format("#%02X%02X%02X", color.getRed(), color.getGreen(), color.getBlue());
+	}
+	
+	/**
+	 * Converts the string to a color 
+	 * 
+	 * E.g. #ffffff -> white 
+	 * 
+	 * @param hexColor
+	 * @return
+	 */
+	public static Color colorFromHexString(String hexColor) {
+		int r, g, b;
+		if (hexColor.length() != 7 || hexColor.charAt(0) != '#') {
+			throw new IllegalArgumentException(hexColor + " is not an HTML color string");
+		}
+		r = Integer.parseInt(hexColor.substring(1, 3), 16);
+		g = Integer.parseInt(hexColor.substring(3, 5), 16);
+		b = Integer.parseInt(hexColor.substring(5, 7), 16);
+		return new Color(r, g, b);
+	}	
 
 	/**
 	 * Converts AWT Color object to an SWT Color object

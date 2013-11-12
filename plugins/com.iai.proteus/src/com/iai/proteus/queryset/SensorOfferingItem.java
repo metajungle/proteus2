@@ -11,8 +11,6 @@ import com.iai.proteus.model.services.Service;
 
 public class SensorOfferingItem {
 
-//	private transient SensorOfferingItemPropertySource property;
-
 	private Service service;
 	private SensorOffering sensorOffering;
 

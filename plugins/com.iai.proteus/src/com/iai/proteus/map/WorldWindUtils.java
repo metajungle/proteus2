@@ -24,6 +24,7 @@ import gov.nasa.worldwind.view.orbit.OrbitViewInputHandler;
 
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -36,6 +37,7 @@ import com.iai.proteus.common.sos.util.SosUtil;
 import com.iai.proteus.model.map.MapLayer;
 import com.iai.proteus.model.services.Service;
 import com.iai.proteus.model.services.ServiceType;
+import com.iai.proteus.queryset.SensorOfferingItem;
 import com.iai.proteus.ui.UIUtil;
 
 /**
@@ -69,6 +71,89 @@ public class WorldWindUtils {
 		markerAttributes = new BasicMarkerAttributes();
 		markerAttributes.setMinMarkerSize(10);
 	}
+	
+	/**
+	 * Returns World Wind markers corresponding to the sensor offerings 
+	 * of a SOS capabilities document 
+	 * 
+	 * @param capabilities
+	 * @return
+	 */
+	public static List<Renderable> 
+		getCapabilitiesMarkers(Collection<SensorOfferingItem> items) 
+	{
+		
+		List<Renderable> renderables = new ArrayList<Renderable>();
+		
+		for (SensorOfferingItem item : items) {
+			
+			Service service = item.getService();
+			SensorOffering offering = item.getSensorOffering();
+
+			Color color = service.getColor();
+			
+//			String url = 
+//					SosUtil.findGetServiceUrl(capabilities, 
+//							SosService.GET_CAPABILITIES); 
+//			
+//			Service service = null;
+//			
+//			if (url != null) {
+//				service = new Service(ServiceType.SOS);
+//				service.setEndpoint(url);
+//				String name = 
+//						capabilities.getServiceIdentification().getTitle();
+//				if (name != null)
+//					service.setName(name);
+//			}			
+			
+			/*
+			 * Create a sector  
+			 */
+			if (isRegion(offering)) {
+				
+				Sector sector = getBoundingBoxSector(offering); 
+				
+				SensorOfferingRegion region = 
+						new SensorOfferingRegion(offering, sector, 
+								regionAttributes);
+				
+				region.setValue(AVKey.DISPLAY_NAME, 
+						offering.getGmlId());
+				
+				if (service != null)
+					region.setService(service);
+				
+				// set color 
+				regionAttributes.setOutlineMaterial(new Material(color));
+				
+				renderables.add(region);
+			} 
+			/*
+			 * Create a place marker 
+			 */
+			else {
+							
+				SensorOfferingPlacemark marker = 
+						new SensorOfferingPlacemark(offering, getCentralPosition(offering), 
+								placemarkAttributes);
+
+				marker.setValue(AVKey.DISPLAY_NAME, 
+						offering.getGmlId());
+
+				if (service != null)
+					marker.setService(service);
+
+				// update attributes appropriately
+				// (must happen after setting the service!)
+				setMarkerAttributesFromColor(color, marker);
+				
+				renderables.add(marker);
+			}
+		}
+		
+		return renderables; 
+	}	
 
 	/**
 	 * Returns World Wind markers corresponding to the sensor offerings 

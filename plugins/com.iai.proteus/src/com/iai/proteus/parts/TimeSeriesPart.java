@@ -14,11 +14,8 @@ package com.iai.proteus.parts;
 import java.awt.Color;
 
 import javax.annotation.PostConstruct;
-import javax.inject.Inject;
 
-import org.eclipse.e4.core.di.annotations.Optional;
 import org.eclipse.e4.ui.di.Focus;
-import org.eclipse.e4.ui.di.UIEventTopic;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -28,8 +25,6 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.experimental.chart.swt.ChartComposite;
 import org.jfree.experimental.swt.SWTUtils;
-
-import com.iai.proteus.events.EventConstants;
 
 public class TimeSeriesPart {
 
@@ -66,11 +61,11 @@ public class TimeSeriesPart {
 		chartComposite.setLayoutData(new GridData(GridData.FILL_BOTH));
 	}
 	
-	@Inject
-	@Optional
-	void receiveEvent(@UIEventTopic(EventConstants.EVENT) String elmt) {
-		System.out.println("From TimeSeries: " + elmt);
-	}	
+//	@Inject
+//	@Optional
+//	void receiveEvent(@UIEventTopic(EventConstants.EVENT) String elmt) {
+//		System.out.println("From TimeSeries: " + elmt);
+//	}	
 	
 
 	@Focus
