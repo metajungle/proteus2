@@ -19,6 +19,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -76,9 +77,13 @@ public class Startup {
      *
      */
     public static void saveServices(Collection<Service> services) {
+    	
+    	System.out.println("Saving services...");
 
     	File parent = Activator.getStateBaseDir();
     	File file = new File(parent, fileServices);
+    	
+    	System.out.println("File: " + file);
 
     	try {
 
@@ -104,17 +109,22 @@ public class Startup {
 
     	File parent = Activator.getStateBaseDir();
     	File services = new File(parent, fileServices);
+    	
+    	System.out.println("File to load from: " + services);
 
     	try {
 
-    		XMLDecoder decoder = new XMLDecoder(new BufferedInputStream(
-    				new FileInputStream(services)));
-    		Object object = decoder.readObject();
-    		if (object instanceof ServiceRoot) {
-    			ServiceRoot root = (ServiceRoot) object;
-    			for (Service service : root) {
-    				ServiceRoot.getInstance().addService(service);
-    			}
+    		try (XMLDecoder decoder = new XMLDecoder(new BufferedInputStream(
+    				new FileInputStream(services)))) 
+    		{
+        		Object object = decoder.readObject();
+        		if (object instanceof ArrayList<?>) {
+        			for (Object obj : (ArrayList<?>) object) {
+        				if (obj instanceof Service) {
+        					ServiceRoot.getInstance().addService((Service) obj);
+        				}
+        			}
+        		}
     		}
 
     		log.trace("Loaded persisted services from disk");

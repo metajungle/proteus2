@@ -34,10 +34,10 @@ public class QuerySet implements ServiceManager {
 	
 	SosSection sosSection;
 	WmsSection wmsSection;
-	
-	// the file where this query set is stored 
+
+	// the file where this query set is stored
 	File file;
-	
+
 	/**
 	 * Constructor
 	 */
@@ -45,7 +45,7 @@ public class QuerySet implements ServiceManager {
 		sosSection = new SosSection();
 		wmsSection = new WmsSection();
 	}
-	
+
 	/**
 	 * @return the uuid
 	 */
@@ -54,7 +54,8 @@ public class QuerySet implements ServiceManager {
 	}
 
 	/**
-	 * @param uuid the uuid to set
+	 * @param uuid
+	 *            the uuid to set
 	 */
 	public void setUuid(String uuid) {
 		this.uuid = uuid;
@@ -67,7 +68,7 @@ public class QuerySet implements ServiceManager {
 	public String getTitle() {
 		return title;
 	}
-	
+
 	/**
 	 * @return the dateCreated
 	 */
@@ -85,12 +86,13 @@ public class QuerySet implements ServiceManager {
 
 	/**
 	 * 
-	 * @param file the file to set
+	 * @param file
+	 *            the file to set
 	 */
 	public void setFile(File file) {
 		this.file = file;
 	}
-	
+
 	/**
 	 * @return the sectionSos
 	 */
@@ -105,27 +107,26 @@ public class QuerySet implements ServiceManager {
 		return wmsSection;
 	}
 
-
 	/**
 	 * SOS Section
 	 * 
 	 * @author Jakob Henriksson
 	 */
 	public class SosSection {
-		
-		Collection<Service> sosServices = new HashSet<>();
+
+		Collection<Service> sosServices = new ArrayList<>();
 		Collection<SosObservedProperty> observedProperties = new HashSet<>();
 		SosBoundingBox boundingBox = new SosBoundingBox();
-		
+
 		/*
-		 * Clears services 
+		 * Clears services
 		 */
 		public void clearSosServices() {
 			sosServices.clear();
 		}
 
 		/**
-		 * Adds a service 
+		 * Adds a service
 		 * 
 		 * @param service
 		 */
@@ -134,48 +135,49 @@ public class QuerySet implements ServiceManager {
 				sosSection.sosServices.add(service);
 			}
 		}
-		
-//		/**
-//		 * Adds a service 
-//		 * 
-//		 * @param endpoint
-//		 * @param title
-//		 * @param active
-//		 * @param color
-//		 */
-//		public void addSosService(String endpoint, String title, boolean active, String color) {
-//			SosService sosService = new SosService();
-//			sosService.endpoint = endpoint;
-//			sosService.title = title;
-//			sosService.active = active;
-//			sosService.color = color;
-//			sosServices.add(sosService);
-//		}
-		
+
+		// /**
+		// * Adds a service
+		// *
+		// * @param endpoint
+		// * @param title
+		// * @param active
+		// * @param color
+		// */
+		// public void addSosService(String endpoint, String title, boolean
+		// active, String color) {
+		// SosService sosService = new SosService();
+		// sosService.endpoint = endpoint;
+		// sosService.title = title;
+		// sosService.active = active;
+		// sosService.color = color;
+		// sosServices.add(sosService);
+		// }
+
 		/**
 		 * @return the sosServices
 		 */
 		public Collection<Service> getSosServices() {
 			return sosServices;
 		}
-		
+
 		/**
-		 * Clears the observed properties 
+		 * Clears the observed properties
 		 * 
 		 */
 		public void clearObservedProperties() {
 			observedProperties.clear();
 		}
-		
+
 		/**
 		 * @return the observedProperties
 		 */
 		public Collection<SosObservedProperty> getObservedProperties() {
 			return observedProperties;
 		}
-		
+
 		/**
-		 * Add an observed property 
+		 * Add an observed property
 		 * 
 		 * @param observedProperty
 		 */
@@ -184,9 +186,9 @@ public class QuerySet implements ServiceManager {
 			property.observedProperty = observedProperty;
 			observedProperties.add(property);
 		}
-		
+
 		/**
-		 * Removes an observed property 
+		 * Removes an observed property
 		 * 
 		 * @param observedProperty
 		 */
@@ -195,8 +197,7 @@ public class QuerySet implements ServiceManager {
 			property.observedProperty = observedProperty;
 			observedProperties.remove(property);
 		}
-		
-		
+
 		/**
 		 * @return the boundingBox
 		 */
@@ -204,52 +205,51 @@ public class QuerySet implements ServiceManager {
 			return boundingBox;
 		}
 	}
-	
-	
-//	public class SosService {
-//		
-//		String endpoint;
-//		String title; 
-//		boolean active;
-//		String color; 
-//		
-//		/**
-//		 * @return the endpoint
-//		 */
-//		public String getEndpoint() {
-//			return endpoint;
-//		}
-//		
-//		/**
-//		 * @return the title
-//		 */
-//		public String getTitle() {
-//			return title;
-//		}
-//
-//		/**
-//		 * @return the active
-//		 */
-//		public boolean isActive() {
-//			return active;
-//		}
-//		
-//		/**
-//		 * @return the color 
-//		 */
-//		public String getColor() {
-//			return color;
-//		}
-//	}
-	
+
+	// public class SosService {
+	//
+	// String endpoint;
+	// String title;
+	// boolean active;
+	// String color;
+	//
+	// /**
+	// * @return the endpoint
+	// */
+	// public String getEndpoint() {
+	// return endpoint;
+	// }
+	//
+	// /**
+	// * @return the title
+	// */
+	// public String getTitle() {
+	// return title;
+	// }
+	//
+	// /**
+	// * @return the active
+	// */
+	// public boolean isActive() {
+	// return active;
+	// }
+	//
+	// /**
+	// * @return the color
+	// */
+	// public String getColor() {
+	// return color;
+	// }
+	// }
+
 	public class SosBoundingBox {
 		Double latL;
 		Double latU;
 		Double lonL;
 		Double lonU;
-		
+
 		/**
-		 * Constructor 
+		 * Constructor
 		 */
 		public SosBoundingBox() {
 			latL = 0.0;
@@ -257,9 +257,10 @@ public class QuerySet implements ServiceManager {
 			lonL = 0.0;
 			lonU = 0.0;
 		}
-		
+
 		/**
-		 * Returns false if there is no active bounding box (see definition), true otherwise 
+		 * Returns false if there is no active bounding box (see definition),
+		 * true otherwise
 		 * 
 		 * @return
 		 */
@@ -269,9 +270,9 @@ public class QuerySet implements ServiceManager {
 			}
 			return true;
 		}
-		
+
 		/**
-		 * Returns the bounding box as an array 
+		 * Returns the bounding box as an array
 		 * 
 		 * @return
 		 */
@@ -281,7 +282,7 @@ public class QuerySet implements ServiceManager {
 			return null;
 		}
 	}
-	
+
 	public class SosObservedProperty {
 
 		String observedProperty;
@@ -293,7 +294,7 @@ public class QuerySet implements ServiceManager {
 		public String getObservedProperty() {
 			return observedProperty;
 		}
-		
+
 		public boolean isChecked() {
 			return checked;
 		}
@@ -332,15 +333,15 @@ public class QuerySet implements ServiceManager {
 		private QuerySet getOuterType() {
 			return QuerySet.this;
 		}
-	}	
-	
+	}
+
 	/**
 	 * WMS Section
 	 * 
 	 * @author Jakob Henriksson
 	 */
 	public class WmsSection {
-		
+
 		Collection<WmsSavedMap> maps = new ArrayList<WmsSavedMap>();
 
 		/**
@@ -350,53 +351,53 @@ public class QuerySet implements ServiceManager {
 			return maps;
 		}
 	}
-	
+
 	public class WmsSavedMap {
 		String endpoint;
 		String name;
 		String title;
 		String notes;
 		boolean active;
-		
+
 		/**
 		 * @return the endpoint
 		 */
 		public String getEndpoint() {
 			return endpoint;
 		}
-		
+
 		/**
 		 * @return the name
 		 */
 		public String getName() {
 			return name;
 		}
-		
+
 		/**
 		 * @return the title
 		 */
 		public String getTitle() {
 			return title;
 		}
-		
+
 		/**
 		 * @return the notes
 		 */
 		public String getNotes() {
 			return notes;
 		}
-		
+
 		/**
 		 * @return the active
 		 */
 		public boolean isActive() {
 			return active;
 		}
-				
+
 	}
-	
+
 	/**
-	 * Adds a service to this query set 
+	 * Adds a service to this query set
 	 * 
 	 * Implements @{link ServiceManager}
 	 * 
@@ -404,25 +405,23 @@ public class QuerySet implements ServiceManager {
 	 */
 	@Override
 	public boolean addService(Service service) {
-		if (!sosSection.sosServices.contains(service))
-			return sosSection.sosServices.add(service);
-		return false;
+		return sosSection.sosServices.add(service);
 	}
-	
+
 	/**
-	 * Removes a service from this query set 
+	 * Removes a service from this query set
 	 * 
 	 * Implements @{link ServiceManager}
 	 * 
-	 * @param service 
+	 * @param service
 	 */
 	@Override
 	public boolean removeService(Service service) {
 		return sosSection.sosServices.remove(service);
 	}
-	
+
 	/**
-	 * Returns the services for this query set 
+	 * Returns the services for this query set
 	 * 
 	 * Implements @{link ServiceManager}
 	 * 
@@ -432,25 +431,27 @@ public class QuerySet implements ServiceManager {
 	public Collection<Service> getServices() {
 		return sosSection.sosServices;
 	}
-	
+
 	/**
-	 * Returns the services matching the given type 
+	 * Returns the services matching the given type
 	 * 
-	 * Implements @{link ServiceManager} 
+	 * Implements @{link ServiceManager}
 	 * 
 	 * @param type
 	 */
 	@Override
 	public Collection<Service> getServices(ServiceType type) {
 		Collection<Service> res = new ArrayList<Service>();
-		for (Service service : sosSection.sosServices) {
+		for (Service service : getServices()) {
 			if (service.getServiceType().equals(type))
 				res.add(service);
 		}
 		return res;
-	}	
+	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Object#hashCode()
 	 */
 	@Override
@@ -461,7 +462,9 @@ public class QuerySet implements ServiceManager {
 		return result;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
@@ -480,5 +483,5 @@ public class QuerySet implements ServiceManager {
 			return false;
 		return true;
 	}
-	
+
 }

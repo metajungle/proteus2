@@ -7,6 +7,8 @@ package com.iai.proteus.dialogs;
 
 import java.util.Collection;
 
+import javax.annotation.PreDestroy;
+
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
@@ -35,8 +37,10 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 
+import com.iai.proteus.Startup;
 import com.iai.proteus.model.services.Service;
 import com.iai.proteus.model.services.ServiceManager;
+import com.iai.proteus.model.services.ServiceRoot;
 import com.iai.proteus.ui.SwtUtil;
 import com.iai.proteus.ui.UIUtil;
 import com.iai.proteus.wizards.AddServiceWizard;
@@ -67,6 +71,11 @@ public class ManageAllServicesDialog extends TitleAreaDialog {
 		super(parentShell);
 		this.manager = manager;
 	}
+	
+	@PreDestroy
+	private void preDestroy() {
+		System.out.println("Destroying...");
+	}
 
 	/**
 	 * Create contents of the dialog.
@@ -87,6 +96,14 @@ public class ManageAllServicesDialog extends TitleAreaDialog {
 					imgNew.dispose();
 				if (imgDelete != null)
 					imgDelete.dispose();
+			}
+		});
+		
+		// add listener to save services
+		parent.addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e) {
+				Startup.saveServices(ServiceRoot.getInstance().getServices());
 			}
 		});
 		

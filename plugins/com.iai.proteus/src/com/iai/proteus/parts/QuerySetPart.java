@@ -578,7 +578,7 @@ public class QuerySetPart implements MapIdentifier {
 	
 	@PreDestroy
 	private void saveState() {
-		Startup.saveServices(getServices());
+		
 	}
 
 	/**
@@ -835,14 +835,15 @@ public class QuerySetPart implements MapIdentifier {
 //					}));
 					
 					// update model
-					updateQuerySetModel(getServices());
+//					updateQuerySetModel(getServices());
+					updateSelectedServices();
 					
 					// count active services 
-					int countActiveServices = 0;
-					for (Service service : getServices()) 
-						countActiveServices += service.isActive() ? 1 : 0;
-					// update live services tile
-					updateLiveTileServices(countActiveServices);				
+//					int countActiveServices = 0;
+//					for (Service service : getServices()) 
+//						countActiveServices += service.isActive() ? 1 : 0;
+//					// update live services tile
+//					updateLiveTileServices(countActiveServices);				
 
 					// refresh viewer as input might have changed 
 					tableViewerSosServices.refresh();
@@ -2856,13 +2857,20 @@ public class QuerySetPart implements MapIdentifier {
 	 * @param services
 	 */
 	private void updateQuerySetModel(Collection<Service> services) {
-		QuerySet.SosSection sectionSos = activeQuerySetModel.getSectionSos();
-		// clear old ones
-		sectionSos.clearSosServices();
+		// clear old services
+		activeQuerySetModel.getSectionSos().clearSosServices();
 		// add services 
 		for (Service service : services) {
-			sectionSos.addSosService(service);
+			activeQuerySetModel.addService(service);	
 		}
+		
+//		QuerySet.SosSection sectionSos = activeQuerySetModel.getSectionSos();
+//		// clear old ones
+//		sectionSos.clearSosServices();
+//		// add services 
+//		for (Service service : services) {
+//			sectionSos.addSosService(service);
+//		}
 	}
 	
 	/**

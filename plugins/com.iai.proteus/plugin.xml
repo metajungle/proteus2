@@ -5,11 +5,16 @@
          id="product"
          point="org.eclipse.core.runtime.products">
       <product
-            name="com.iai.proteus"
-            application="org.eclipse.e4.ui.workbench.swt.E4Application">
+            application="org.eclipse.e4.ui.workbench.swt.E4Application"
+            description="Sensor Discovery "
+            name="Proteus">
          <property
                name="applicationCSS"
                value="platform:/plugin/com.iai.proteus/css/default.css">
+         </property>
+         <property
+               name="lifeCycleURI"
+               value="bundleclass://com.iai.proteus/com.iai.proteus.LifeCycleManager">
          </property>
       </product>
    </extension>
