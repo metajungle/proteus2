@@ -19,6 +19,7 @@ import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
 import org.apache.log4j.Logger;
@@ -71,8 +72,6 @@ import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.MouseAdapter;
@@ -109,6 +108,7 @@ import org.eclipse.ui.dialogs.PatternFilter;
 import org.eclipse.wb.swt.old.SWTResourceManager;
 import org.joda.time.Period;
 
+import com.iai.proteus.Startup;
 import com.iai.proteus.common.Labeling;
 import com.iai.proteus.common.sos.SupportedResponseFormats;
 import com.iai.proteus.common.sos.data.Field;
@@ -576,6 +576,10 @@ public class QuerySetPart implements MapIdentifier {
 //		return event.getTopic().equals(topic.toString());
 //	}
 	
+	@PreDestroy
+	private void saveState() {
+		Startup.saveServices(getServices());
+	}
 
 	/**
 	 * Create a new tab
@@ -584,14 +588,6 @@ public class QuerySetPart implements MapIdentifier {
 	 */
 	@PostConstruct 
 	private void createComposite(final Composite parent) {
-		
-		// dispose listener 
-		parent.addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e) {
-				disposeResources();
-			}
-		});
 		
 //		setShowClose(true);
 
@@ -988,7 +984,7 @@ public class QuerySetPart implements MapIdentifier {
 		// input has to be set after the @{link TableViewerColumns} are defined		
 		tableViewerSosServices.setContentProvider(new ServiceContentProvider(ServiceType.SOS));
 		tableViewerSosServices.setUseHashlookup(true);
-		tableViewerSosServices.setInput(activeQuerySetModel.getServices());
+		tableViewerSosServices.setInput(activeQuerySetModel);
 		
 		// pop menu for service 
 //		MenuManager menuMgr = new MenuManager("#PopupMenu");
@@ -2796,10 +2792,15 @@ public class QuerySetPart implements MapIdentifier {
 		// default - empty input 
 		treeViewerWmsLayers.setInput(new Object[0]);
 	}
+
+	@PreDestroy
+	private void preDestroy() {
+		disposeResources();
+	}
 	
 	@Inject
 	@Optional
-	void receiveEvent(@UIEventTopic(EventConstants.EVENT_GEO_BBOX_UPDATED) Sector sector) {
+	private void receiveEvent(@UIEventTopic(EventConstants.EVENT_GEO_BBOX_UPDATED) Sector sector) {
 		if (sector != null) {
 			System.out.println("Region updated: " + sector.toString());
 			lblBoundingBoxRestriction.setText("" + sector.toString());
@@ -2810,14 +2811,13 @@ public class QuerySetPart implements MapIdentifier {
 
 	@Inject
 	@Optional
-	void receiveEvent(@UIEventTopic(EventConstants.EVENT_GEO_BBOX_CLEARED) String sector) {
+	private void receiveEvent(@UIEventTopic(EventConstants.EVENT_GEO_BBOX_CLEARED) String sector) {
 		if (sector.equals("")) {
 			System.out.println("Region cleared");
 			lblBoundingBoxRestriction.setText("No region currently active.");
 		} 
 		lblBoundingBoxRestriction.update();
 	}	
-	
 	
 	@Focus
 	public void setFocus() {
@@ -2826,6 +2826,9 @@ public class QuerySetPart implements MapIdentifier {
 	
 	@Persist
 	public void save() {
+		
+		// TODO: persist query set 
+		
 		dirty.setDirty(false);
 	}
 	

@@ -32,7 +32,7 @@ public class AddServiceWizard extends Wizard {
 		setWindowTitle("Add Sensor Observation Service");
 		ImageDescriptor id =
 			UIUtil.getImageDescriptor(Activator.PLUGIN_ID,
-					"icons/fugue/icons-32/database.png");
+					"resources/icons/fugue/icons-32/database.png");
 		setDefaultPageImageDescriptor(id);
 		setNeedsProgressMonitor(true);
 		setHelpAvailable(true);

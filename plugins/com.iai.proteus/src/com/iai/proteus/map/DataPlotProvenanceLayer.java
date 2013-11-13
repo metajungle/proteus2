@@ -119,7 +119,7 @@ public class DataPlotProvenanceLayer extends SelectionLayer {
 
 			if (position != null) {
 				UserFacingIcon icon =
-						new UserFacingIcon(getIconSource("icons/fugue/chart.png"),
+						new UserFacingIcon(getIconSource("resources/icons/fugue/chart.png"),
 								position);
 				if (icon != null) {
 					icon.setAlwaysOnTop(true);
