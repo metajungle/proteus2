@@ -104,23 +104,26 @@ public class Startup {
     	File parent = Activator.getStateBaseDir();
     	File file = new File(parent, servicesFilename);
     	
-    	log.trace("Restoring services from disk (file: " + file + ".");
-
-    	try {
-    		
-			JSONArray json = 
-					new JSONArray(FileUtils.readFileToString(file));
-			
-			Collection<Service> services = servicesFromJSON(json);
-			
-			for (Service service : services) {
-				ServiceRoot.getInstance().addService(service);
-			}
-			
-    	} catch (JSONException e) {
-    		log.error("JSONException: " + e.getMessage());
-    	} catch (IOException e) {
-    		log.error("IOException: " + e.getMessage());
+    	if (file.exists()) {
+	    	log.trace("Restoring services from disk (file: " + file + ".");
+	    	try {
+	    		
+				JSONArray json = 
+						new JSONArray(FileUtils.readFileToString(file));
+				
+				Collection<Service> services = servicesFromJSON(json);
+				
+				for (Service service : services) {
+					ServiceRoot.getInstance().addService(service);
+				}
+				
+	    	} catch (JSONException e) {
+	    		log.error("JSONException: " + e.getMessage());
+	    	} catch (IOException e) {
+	    		log.error("IOException: " + e.getMessage());
+	    	}
+    	} else {
+    		log.warn("Services file " + file + " did not exist");
     	}
     }
     
