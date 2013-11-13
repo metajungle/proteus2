@@ -9,20 +9,12 @@ import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
-import java.beans.XMLDecoder;
-import java.beans.XMLEncoder;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
@@ -30,6 +22,9 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.iai.proteus.common.sos.GetCapabilities;
 import com.iai.proteus.common.sos.SosCapabilitiesCache;
@@ -37,6 +32,8 @@ import com.iai.proteus.common.sos.model.SosCapabilities;
 import com.iai.proteus.model.map.MapLayer;
 import com.iai.proteus.model.services.Service;
 import com.iai.proteus.model.services.ServiceRoot;
+import com.iai.proteus.model.services.ServiceType;
+import com.iai.proteus.ui.UIUtil;
 
 public class Startup {
 
@@ -51,7 +48,7 @@ public class Startup {
 	/*
 	 * File names
 	 */
-	public static String fileServices = "services.xml";
+	public static String servicesFilename = "services.json";
 
     /**
      * Loads the layer configuration from a configuration file
@@ -68,7 +65,7 @@ public class Startup {
      */
     public static boolean servicesFileExists() {
 		File parent = Activator.getStateBaseDir();
-		File services = new File(parent, fileServices);
+		File services = new File(parent, servicesFilename);
 		return services.exists();
     }
 
@@ -78,27 +75,24 @@ public class Startup {
      */
     public static void saveServices(Collection<Service> services) {
     	
-    	System.out.println("Saving services...");
-
     	File parent = Activator.getStateBaseDir();
-    	File file = new File(parent, fileServices);
+    	File file = new File(parent, servicesFilename);
     	
-    	System.out.println("File: " + file);
+    	log.trace("Persisting services to disk (file: " + file + ".");
 
     	try {
-
-    		XMLEncoder encoder = new XMLEncoder(new BufferedOutputStream(
-    				new FileOutputStream(file)));
-    		encoder.writeObject(services);
-    		encoder.close();
-
+    		
+    		JSONArray array = servicesToJSON(services);
+    		String json = array.toString(2);
+    		FileUtils.writeStringToFile(file, json);
+    		
     		log.trace("Persisted services to disk");
-
-    	} catch (FileNotFoundException e) {
-    		log.error("Persisted services file: " +
-    				file.getAbsolutePath() + " not found");
-    	}
-
+    		
+    	} catch (JSONException e) {
+    		log.error("JSONException: " + e.getMessage());
+    	} catch (IOException e) {
+    		log.error("IOException: " + e.getMessage());
+		}
     }
 
     /**
@@ -108,36 +102,126 @@ public class Startup {
     public static void loadServices() {
 
     	File parent = Activator.getStateBaseDir();
-    	File services = new File(parent, fileServices);
+    	File file = new File(parent, servicesFilename);
     	
-    	System.out.println("File to load from: " + services);
+    	log.trace("Restoring services from disk (file: " + file + ".");
 
     	try {
-
-    		try (XMLDecoder decoder = new XMLDecoder(new BufferedInputStream(
-    				new FileInputStream(services)))) 
-    		{
-        		Object object = decoder.readObject();
-        		if (object instanceof ArrayList<?>) {
-        			for (Object obj : (ArrayList<?>) object) {
-        				if (obj instanceof Service) {
-        					ServiceRoot.getInstance().addService((Service) obj);
-        				}
-        			}
-        		}
-    		}
-
-    		log.trace("Loaded persisted services from disk");
-
-    	} catch (FileNotFoundException e) {
-    		log.error("Persisted services file: " +
-    				services.getAbsolutePath() + " not found");
-    	} catch (NoSuchElementException e) {
-    		log.error("NoSuchElementException when loading services: " +
-    				e.getMessage());
+    		
+			JSONArray json = 
+					new JSONArray(FileUtils.readFileToString(file));
+			
+			Collection<Service> services = servicesFromJSON(json);
+			
+			for (Service service : services) {
+				ServiceRoot.getInstance().addService(service);
+			}
+			
+    	} catch (JSONException e) {
+    		log.error("JSONException: " + e.getMessage());
+    	} catch (IOException e) {
+    		log.error("IOException: " + e.getMessage());
     	}
     }
+    
+    /**
+     * Enum class for JSON keys for service serialization  
+     * 
+     * @author b0kaj
+     *
+     */
+    public enum ServiceJSONKeys {
+    	
+    	ENDPOINT("endpoint"), 
+    	TYPE("type"), 
+    	NAME("name"), 
+    	COLOR("color");
+    	
+    	private String key;
+    	
+    	/**
+    	 * Constructor
+    	 * 
+    	 * @param key
+    	 */
+    	private ServiceJSONKeys(String key) {
+    		this.key = key;
+    	}
+    	
+    	@Override
+    	public String toString() {
+    		return key;
+    	}
+    }
+    
+    /**
+     * Serializes a collection of services to JSON 
+     * 
+     * @param services
+     * @return
+     * @throws JSONException
+     */
+    private static JSONArray servicesToJSON(Collection<Service> services) throws JSONException {
+    	
+    	JSONArray array = new JSONArray();
+    	for (Service service : services) {
+    		JSONObject object = new JSONObject();
+    		object.put(ServiceJSONKeys.ENDPOINT.toString(), service.getEndpoint());
+    		object.put(ServiceJSONKeys.TYPE.toString(), service.getServiceType());
+    		object.put(ServiceJSONKeys.NAME.toString(), service.getName());
+    		object.put(ServiceJSONKeys.COLOR.toString(), UIUtil.colorToHexString(service.getColor()));
+    		array.put(object);
+    	}
+    	
+    	return array;
+    }
+    
+    /**
+     * Serializes a collection of services to JSON 
+     * 
+     * @param services
+     * @return
+     * @throws JSONException
+     */
+    private static Collection<Service> servicesFromJSON(JSONArray json) throws JSONException {
 
+    	Collection<Service> services = new ArrayList<>();
+    	for (int i = 0; i < json.length(); i++) {
+    		Object object = json.get(i);
+    		if (object instanceof JSONObject) {
+    			JSONObject jsonObj = (JSONObject) object;
+    			Service service = new Service();
+    			try {
+    				try {
+        				String type = jsonObj.getString(ServiceJSONKeys.TYPE.toString());
+    					ServiceType serviceType = ServiceType.parse(type);
+    					service.setServiceType(serviceType);
+    				} catch (IllegalArgumentException e) {
+    					System.err.println("Did not understand service type: " + e.getMessage());
+    					continue;
+    				}
+    				String endpoint = jsonObj.getString(ServiceJSONKeys.ENDPOINT.toString());
+    				service.setEndpoint(endpoint);
+    				String name = jsonObj.getString(ServiceJSONKeys.NAME.toString());
+    				service.setName(name);
+    				String color = jsonObj.getString(ServiceJSONKeys.COLOR.toString());
+    				service.setColor(UIUtil.colorFromHexString(color));
+    				
+    				services.add(service);
+    				
+    			} catch (JSONException e) {
+    				log.error("Key not found: " + e.getMessage());
+    			}
+    		}
+    	}
+    	
+    	return services;
+    }    
+
+    /**
+     * Store capabilities documents to disk 
+     * 
+     */
 	public static void storeCapabilities() {
 
 		File parent = Activator.getStateBaseDir();

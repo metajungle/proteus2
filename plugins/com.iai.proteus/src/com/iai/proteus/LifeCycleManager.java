@@ -26,5 +26,7 @@ public class LifeCycleManager {
 	private void preSave() {
 		// save services
 		Startup.saveServices(ServiceRoot.getInstance().getServices());
+		// store capabilities
+		Startup.storeCapabilities();
 	}
 }
