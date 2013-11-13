@@ -126,7 +126,7 @@ import com.iai.proteus.queryset.LabelProvider;
 import com.iai.proteus.queryset.ObservedPropertiesFilter;
 import com.iai.proteus.queryset.ObservedPropertiesHolder;
 import com.iai.proteus.queryset.ObservedProperty;
-import com.iai.proteus.queryset.SensorOfferingItem;
+import com.iai.proteus.queryset.SosOfferingObject;
 import com.iai.proteus.queryset.SensorOfferingsHolder;
 import com.iai.proteus.queryset.TimeFacet;
 
@@ -3134,7 +3134,7 @@ public class QuerySetTab implements MapIdentifier, ServiceManager {
 	 * @param rangeVariables
 	 */
 	@SuppressWarnings("serial")
-	private void previewData(SensorOfferingItem offeringItem,
+	private void previewData(SosOfferingObject offeringItem,
 			String observedProperty,
 			Field domainVariable, Collection<Field> rangeVariables)
 	{
@@ -3186,7 +3186,7 @@ public class QuerySetTab implements MapIdentifier, ServiceManager {
 	 *
 	 * @return
 	 */
-	private SensorOfferingItem getSensorOfferingSelection() {
+	private SosOfferingObject getSensorOfferingSelection() {
 		ISelection selection = tableViewerSensorOfferings.getSelection();
 		if (selection instanceof StructuredSelection) {
 			StructuredSelection structured =
@@ -3194,8 +3194,8 @@ public class QuerySetTab implements MapIdentifier, ServiceManager {
 
 			Object first = structured.getFirstElement();
 
-			if (first instanceof SensorOfferingItem) {
-				return ((SensorOfferingItem) first);
+			if (first instanceof SosOfferingObject) {
+				return ((SosOfferingObject) first);
 			}
 		}
 		// default
@@ -3307,7 +3307,7 @@ public class QuerySetTab implements MapIdentifier, ServiceManager {
 	 *
 	 * @param offeringItem
 	 */
-	private void updateAvailableVariables(SensorOfferingItem offeringItem) {
+	private void updateAvailableVariables(SosOfferingObject offeringItem) {
 
 		SensorOffering sensorOffering = offeringItem.getSensorOffering();
 		String offeringId = sensorOffering.getGmlId();
@@ -3357,7 +3357,7 @@ public class QuerySetTab implements MapIdentifier, ServiceManager {
 	 */
 	private void prepareForPreview() {
 
-		SensorOfferingItem offeringItem = getSensorOfferingSelection();
+		SosOfferingObject offeringItem = getSensorOfferingSelection();
 		if (offeringItem != null) {
 
 			SensorOffering offering = offeringItem.getSensorOffering();
@@ -3697,7 +3697,7 @@ public class QuerySetTab implements MapIdentifier, ServiceManager {
 	 *
 	 * @param offerings
 	 */
-	public void updateSensorOfferings(final Collection<SensorOfferingItem> offerings)
+	public void updateSensorOfferings(final Collection<SosOfferingObject> offerings)
 	{
 
 		// update the viewer model

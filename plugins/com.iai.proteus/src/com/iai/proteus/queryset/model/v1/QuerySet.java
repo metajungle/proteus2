@@ -96,14 +96,14 @@ public class QuerySet implements ServiceManager {
 	/**
 	 * @return the sectionSos
 	 */
-	public SosSection getSectionSos() {
+	public SosSection getSosSection() {
 		return sosSection;
 	}
 
 	/**
 	 * @return the sectionWms
 	 */
-	public WmsSection getSectionWms() {
+	public WmsSection getWmsSection() {
 		return wmsSection;
 	}
 
@@ -135,24 +135,6 @@ public class QuerySet implements ServiceManager {
 				sosSection.sosServices.add(service);
 			}
 		}
-
-		// /**
-		// * Adds a service
-		// *
-		// * @param endpoint
-		// * @param title
-		// * @param active
-		// * @param color
-		// */
-		// public void addSosService(String endpoint, String title, boolean
-		// active, String color) {
-		// SosService sosService = new SosService();
-		// sosService.endpoint = endpoint;
-		// sosService.title = title;
-		// sosService.active = active;
-		// sosService.color = color;
-		// sosServices.add(sosService);
-		// }
 
 		/**
 		 * @return the sosServices
@@ -199,87 +181,21 @@ public class QuerySet implements ServiceManager {
 		}
 
 		/**
+		 * Returns the bounding box 
+		 * 
 		 * @return the boundingBox
 		 */
 		public SosBoundingBox getBoundingBox() {
 			return boundingBox;
 		}
-	}
-
-	// public class SosService {
-	//
-	// String endpoint;
-	// String title;
-	// boolean active;
-	// String color;
-	//
-	// /**
-	// * @return the endpoint
-	// */
-	// public String getEndpoint() {
-	// return endpoint;
-	// }
-	//
-	// /**
-	// * @return the title
-	// */
-	// public String getTitle() {
-	// return title;
-	// }
-	//
-	// /**
-	// * @return the active
-	// */
-	// public boolean isActive() {
-	// return active;
-	// }
-	//
-	// /**
-	// * @return the color
-	// */
-	// public String getColor() {
-	// return color;
-	// }
-	// }
-
-	public class SosBoundingBox {
-		Double latL;
-		Double latU;
-		Double lonL;
-		Double lonU;
-
+		
 		/**
-		 * Constructor
-		 */
-		public SosBoundingBox() {
-			latL = 0.0;
-			latU = 0.0;
-			lonL = 0.0;
-			lonU = 0.0;
-		}
-
-		/**
-		 * Returns false if there is no active bounding box (see definition),
-		 * true otherwise
+		 * Sets the bounding box
 		 * 
-		 * @return
+		 * @param boundingBox
 		 */
-		public boolean hasBoundingBox() {
-			if (latL == 0.0 && latU == 0.0 && lonL == 0.0 && lonU == 0.0) {
-				return false;
-			}
-			return true;
-		}
-
-		/**
-		 * Returns the bounding box as an array
-		 * 
-		 * @return
-		 */
-		public double[] getAsArray() {
-			if (latL != null && latU != null && lonL != null && lonU != null)
-				return new double[] { latL, latU, lonL, lonU };
-			return null;
+		public void setBoundingBox(SosBoundingBox boundingBox) {
+			this.boundingBox = boundingBox;
 		}
 	}
 

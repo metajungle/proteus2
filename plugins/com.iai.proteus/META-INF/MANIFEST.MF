@@ -33,4 +33,6 @@ Bundle-ClassPath: .,
  lib/gson-2.2.2.jar,
  lib/javaxt-gis.jar,
  lib/javaxt-rss.jar,
- lib/commons-validator-1.4.0.jar
+ lib/commons-validator-1.4.0.jar,
+ lib/hamcrest-core-1.3.jar,
+ lib/junit-4.11.jar

@@ -29,8 +29,8 @@ public class LabelProvider implements ILabelProvider {
 		/*
 		 * Sensor offerings
 		 */
-		if (element instanceof SensorOfferingItem) {
-			SensorOfferingItem item = (SensorOfferingItem) element;
+		if (element instanceof SosOfferingObject) {
+			SosOfferingObject item = (SosOfferingObject) element;
 			return item.getSensorOffering().getGmlId();
 		}
 		/*

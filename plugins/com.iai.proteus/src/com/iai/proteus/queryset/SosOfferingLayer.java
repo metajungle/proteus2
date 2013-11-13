@@ -377,7 +377,7 @@ public class SosOfferingLayer extends RenderableLayer
 		Sector sector = getSector();
 
 		Map<String, Integer> propertyCount = new HashMap<String, Integer>();
-		Collection<SensorOfferingItem> offeringItems = new ArrayList<SensorOfferingItem>();
+		Collection<SosOfferingObject> offeringItems = new ArrayList<SosOfferingObject>();
 		Collection<String> formats = new HashSet<String>();
 
 		// all offerings
@@ -531,8 +531,8 @@ public class SosOfferingLayer extends RenderableLayer
 
 				if (conjunction) {
 
-					SensorOfferingItem offeringItem =
-							new SensorOfferingItem(marker.getService(), offering);
+					SosOfferingObject offeringItem =
+							new SosOfferingObject(marker.getService(), offering);
 
 					offeringItems.add(offeringItem);
 
@@ -631,7 +631,7 @@ public class SosOfferingLayer extends RenderableLayer
 	 *
 	 */
 	@Override
-	public Collection<SensorOfferingItem> getSensorOfferingsContribution() {
+	public Collection<SosOfferingObject> getSensorOfferingsContribution() {
 		return getSensorOfferingsContribution(getSector());
 	}
 
@@ -652,9 +652,9 @@ public class SosOfferingLayer extends RenderableLayer
 	 * @param sector
 	 * @return
 	 */
-	private Collection<SensorOfferingItem> getSensorOfferingsContribution(Sector sector) {
+	private Collection<SosOfferingObject> getSensorOfferingsContribution(Sector sector) {
 
-		Collection<SensorOfferingItem> offerings = new ArrayList<SensorOfferingItem>();
+		Collection<SosOfferingObject> offerings = new ArrayList<SosOfferingObject>();
 
 //		int noOfferingsInRegion = 0;
 
@@ -673,8 +673,8 @@ public class SosOfferingLayer extends RenderableLayer
 					offering.loadSensorOffering(capabilities);
 				}
 
-				SensorOfferingItem offeringItem =
-						new SensorOfferingItem(marker.getService(), offering);
+				SosOfferingObject offeringItem =
+						new SosOfferingObject(marker.getService(), offering);
 
 				offerings.add(offeringItem);
 

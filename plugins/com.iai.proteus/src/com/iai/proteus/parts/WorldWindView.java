@@ -79,7 +79,7 @@ import com.iai.proteus.model.services.Service;
 import com.iai.proteus.queryset.Facet;
 import com.iai.proteus.queryset.FacetChangeToggle;
 import com.iai.proteus.queryset.RearrangeMapsEventValue;
-import com.iai.proteus.queryset.SensorOfferingItem;
+import com.iai.proteus.queryset.SosOfferingObject;
 import com.iai.proteus.queryset.SosOfferingLayer;
 import com.iai.proteus.ui.UIUtil;
 
@@ -738,7 +738,7 @@ public class WorldWindView implements SelectListener, PropertyChangeListener {
 	
 	@Inject
 	@Optional
-	void receiveEvent(@UIEventTopic(EventConstants.EVENT_GEO_OFFERINGS_UPDATE) Collection<SensorOfferingItem> items) {
+	void receiveEvent(@UIEventTopic(EventConstants.EVENT_GEO_OFFERINGS_UPDATE) Collection<SosOfferingObject> items) {
 		System.out.println("Items: " + items.size());
 		
 		List<Renderable> markers = WorldWindUtils.getCapabilitiesMarkers(items);

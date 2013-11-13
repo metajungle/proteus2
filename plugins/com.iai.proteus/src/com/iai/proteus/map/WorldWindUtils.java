@@ -37,7 +37,7 @@ import com.iai.proteus.common.sos.util.SosUtil;
 import com.iai.proteus.model.map.MapLayer;
 import com.iai.proteus.model.services.Service;
 import com.iai.proteus.model.services.ServiceType;
-import com.iai.proteus.queryset.SensorOfferingItem;
+import com.iai.proteus.queryset.SosOfferingObject;
 import com.iai.proteus.ui.UIUtil;
 
 /**
@@ -80,12 +80,12 @@ public class WorldWindUtils {
 	 * @return
 	 */
 	public static List<Renderable> 
-		getCapabilitiesMarkers(Collection<SensorOfferingItem> items) 
+		getCapabilitiesMarkers(Collection<SosOfferingObject> items) 
 	{
 		
 		List<Renderable> renderables = new ArrayList<Renderable>();
 		
-		for (SensorOfferingItem item : items) {
+		for (SosOfferingObject item : items) {
 			
 			Service service = item.getService();
 			SensorOffering offering = item.getSensorOffering();

@@ -86,7 +86,7 @@ public class QuerySetPersist {
 
 			// SOS - services 
 			JSONArray sosServices = new JSONArray();
-			for (Service service : querySet.getSectionSos().getSosServices()) {
+			for (Service service : querySet.getSosSection().getSosServices()) {
 				JSONObject sosService = new JSONObject();
 				sosService.put(Keys.SERVICE_ENDPOINT.toString(), service.getEndpoint());
 				sosService.put(Keys.SERVICE_TITLE.toString(), service.getName());
@@ -100,8 +100,8 @@ public class QuerySetPersist {
 			
 			// SOS - bounding box 
 			JSONArray boundingBox = new JSONArray();
-			if (querySet.getSectionSos().getBoundingBox().hasBoundingBox()) {
-				for (double d : querySet.getSectionSos().getBoundingBox().getAsArray()) {
+			if (querySet.getSosSection().getBoundingBox().hasBoundingBox()) {
+				for (double d : querySet.getSosSection().getBoundingBox().getAsArray()) {
 					boundingBox.put(d);
 				}
 			}
@@ -109,7 +109,7 @@ public class QuerySetPersist {
 			
 			// SOS - observed properties
 			JSONArray observedProperties = new JSONArray();
-			for (QuerySet.SosObservedProperty property : querySet.getSectionSos().getObservedProperties()) {
+			for (QuerySet.SosObservedProperty property : querySet.getSosSection().getObservedProperties()) {
 				if (property.isChecked()) {
 					observedProperties.put(property.getObservedProperty());
 				}
@@ -122,7 +122,7 @@ public class QuerySetPersist {
 			
 			// WMS - maps
 			JSONArray wmsMaps = new JSONArray();
-			for (QuerySet.WmsSavedMap savedMap : querySet.getSectionWms().getMaps()) {
+			for (QuerySet.WmsSavedMap savedMap : querySet.getWmsSection().getMaps()) {
 				JSONObject wmsMap = new JSONObject();
 				wmsMap.put(Keys.SERVICE_ENDPOINT.toString(), savedMap.getEndpoint());
 				wmsMap.put(Keys.SERVICE_ACTIVE.toString(), savedMap.isActive());

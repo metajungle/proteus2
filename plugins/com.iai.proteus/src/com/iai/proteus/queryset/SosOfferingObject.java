@@ -9,7 +9,7 @@ package com.iai.proteus.queryset;
 import com.iai.proteus.common.sos.model.SensorOffering;
 import com.iai.proteus.model.services.Service;
 
-public class SensorOfferingItem {
+public class SosOfferingObject {
 
 	private Service service;
 	private SensorOffering sensorOffering;
@@ -20,7 +20,7 @@ public class SensorOfferingItem {
 	 * @param service
 	 * @param sensorOffering
 	 */
-	public SensorOfferingItem(Service service, SensorOffering sensorOffering) {
+	public SosOfferingObject(Service service, SensorOffering sensorOffering) {
 		this.service = service;
 		this.sensorOffering = sensorOffering;
 	}
@@ -41,8 +41,8 @@ public class SensorOfferingItem {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof SensorOfferingItem) {
-			SensorOfferingItem item = (SensorOfferingItem) obj;
+		if (obj instanceof SosOfferingObject) {
+			SosOfferingObject item = (SosOfferingObject) obj;
 			if (item.getSensorOffering().getGmlId().equals(getSensorOffering().getGmlId()))
 					return true;
 		}

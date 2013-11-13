@@ -13,7 +13,7 @@ public class SensorOfferingsHolder {
 	/*
 	 * Holds the sensor offerings
 	 */
-	private Collection<SensorOfferingItem> sensorOfferings;
+	private Collection<SosOfferingObject> sensorOfferings;
 
 	/**
 	 * Constructor
@@ -21,7 +21,7 @@ public class SensorOfferingsHolder {
 	 */
 	public SensorOfferingsHolder() {
 
-		sensorOfferings = new ArrayList<SensorOfferingItem>();
+		sensorOfferings = new ArrayList<SosOfferingObject>();
 	}
 
 	/**
@@ -29,7 +29,7 @@ public class SensorOfferingsHolder {
 	 *
 	 * @param sensorOfferings
 	 */
-	public void setSensorOfferings(Collection<SensorOfferingItem> sensorOfferings) {
+	public void setSensorOfferings(Collection<SosOfferingObject> sensorOfferings) {
 		this.sensorOfferings = sensorOfferings;
 	}
 
@@ -38,7 +38,7 @@ public class SensorOfferingsHolder {
 	 *
 	 * @return
 	 */
-	public Collection<SensorOfferingItem> getSensorOfferings() {
+	public Collection<SosOfferingObject> getSensorOfferings() {
 		return sensorOfferings;
 	}
 
