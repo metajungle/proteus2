@@ -6,7 +6,9 @@ import javax.inject.Inject;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.e4.ui.di.UISynchronize;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.ProgressBar;
 
 public class MyToolControl implements IProgressMonitor {
@@ -18,6 +20,8 @@ public class MyToolControl implements IProgressMonitor {
 
 	@PostConstruct
 	public void createControls(Composite parent) {
+		parent.setLayout(new RowLayout());
+		new Label(parent, SWT.NONE).setText("Status bar");
 		progressBar = new ProgressBar(parent, SWT.SMOOTH);
 		progressBar.setBounds(100, 10, 200, 20);
 		progressBar.setVisible(true);
@@ -66,6 +70,8 @@ public class MyToolControl implements IProgressMonitor {
 			@Override
 			public void run() {
 				progressBar.setEnabled(false);
+//				progressBar.setVisible(false);
+				progressBar.setSelection(100);
 			}
 		});
 	}

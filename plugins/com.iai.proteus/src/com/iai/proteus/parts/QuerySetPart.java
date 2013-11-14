@@ -177,6 +177,7 @@ public class QuerySetPart implements MapIdentifier {
 	EModelService service;
 	
 	@Inject 
+	@Optional
 	MApplication application;
 	
 	@Inject
@@ -612,16 +613,19 @@ public class QuerySetPart implements MapIdentifier {
 				(MToolControl) 
 					service.find("com.iai.proteus.toolcontrol.jobstatus",
 							application);
-
-		Object widget = element.getObject();
-		final IProgressMonitor p = (IProgressMonitor) widget;
-		ProgressProvider provider = new ProgressProvider() {
-			@Override
-			public IProgressMonitor createMonitor(Job job) {
-				return p;
-			}
-		};
-		manager.setProgressProvider(provider);
+		if (element != null) {
+			Object widget = element.getObject();
+			final IProgressMonitor p = (IProgressMonitor) widget;
+			ProgressProvider provider = new ProgressProvider() {
+				@Override
+				public IProgressMonitor createMonitor(Job job) {
+					return p;
+				}
+			};
+			manager.setProgressProvider(provider);
+		} else {
+			System.err.println("Could not find model element...");
+		}
 		
 
 		// setShowClose(true);
@@ -3378,7 +3382,7 @@ public class QuerySetPart implements MapIdentifier {
 			}
 		};
 		manager.setProgressProvider(provider);		
-		
+//		
 		job.schedule();		
 
 		// // create job for updating offerings
