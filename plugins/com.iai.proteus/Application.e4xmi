@@ -33,6 +33,9 @@
         <children xsi:type="menu:HandledToolItem" xmi:id="_de8hU0bzEeOuVPJZKUvhmA" iconURI="platform:/plugin/com.iai.proteus/icons/save_edit.gif" command="_de76U0bzEeOuVPJZKUvhmA"/>
       </children>
     </trimBars>
+    <trimBars xmi:id="_WN9RkE02EeOML4wFHEFoVg" elementId="com.iai.proteus.statusbar" side="Bottom">
+      <children xsi:type="menu:ToolBar" xmi:id="_xtHVYE02EeOML4wFHEFoVg" elementId="com.iai.proteus.toolbar.1"/>
+    </trimBars>
   </children>
   <handlers xmi:id="_de76TUbzEeOuVPJZKUvhmA" elementId="com.iai.proteus.handler.quitCommand" contributionURI="bundleclass://com.iai.proteus/com.iai.proteus.handlers.QuitHandler" command="_de76TEbzEeOuVPJZKUvhmA"/>
   <handlers xmi:id="_de76UUbzEeOuVPJZKUvhmA" elementId="com.iai.proteus.handler.openCommand" contributionURI="bundleclass://com.iai.proteus/com.iai.proteus.handlers.OpenHandler" command="_de76UEbzEeOuVPJZKUvhmA"/>

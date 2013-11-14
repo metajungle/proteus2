@@ -744,6 +744,8 @@ public class WorldWindView implements SelectListener, PropertyChangeListener {
 		List<Renderable> markers = WorldWindUtils.getCapabilitiesMarkers(items);
 		
 		offeringsLayer.setRenderables(markers);
+		
+		getWwd().redraw();
 	}	
 	
 	

@@ -16,6 +16,10 @@
                name="lifeCycleURI"
                value="bundleclass://com.iai.proteus/com.iai.proteus.LifeCycleManager">
          </property>
+         <property
+               name="appName"
+               value="Proteus">
+         </property>
       </product>
    </extension>
 

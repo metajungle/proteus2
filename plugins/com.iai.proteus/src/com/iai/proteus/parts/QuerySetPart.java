@@ -25,13 +25,18 @@ import javax.inject.Inject;
 import org.apache.log4j.Logger;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.jobs.IJobManager;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.core.runtime.jobs.ProgressProvider;
 import org.eclipse.e4.core.di.annotations.Optional;
 import org.eclipse.e4.core.services.events.IEventBroker;
 import org.eclipse.e4.ui.di.Focus;
 import org.eclipse.e4.ui.di.Persist;
 import org.eclipse.e4.ui.di.UIEventTopic;
+import org.eclipse.e4.ui.model.application.MApplication;
 import org.eclipse.e4.ui.model.application.ui.MDirtyable;
+import org.eclipse.e4.ui.model.application.ui.menu.MToolControl;
+import org.eclipse.e4.ui.workbench.modeling.EModelService;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.jface.dialogs.InputDialog;
@@ -83,16 +88,19 @@ import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.ColorDialog;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
@@ -162,6 +170,15 @@ public class QuerySetPart implements MapIdentifier {
 
 	private static final Logger log = Logger.getLogger(QuerySetPart.class);
 
+	@Inject 
+	private Shell shell; 
+	
+	@Inject
+	EModelService service;
+	
+	@Inject 
+	MApplication application;
+	
 	@Inject
 	private IEventBroker eventBroker;
 
@@ -588,6 +605,24 @@ public class QuerySetPart implements MapIdentifier {
 	 */
 	@PostConstruct
 	private void createComposite(final Composite parent) {
+		
+		// setting the progress monitor
+		IJobManager manager = Job.getJobManager();
+		MToolControl element = 
+				(MToolControl) 
+					service.find("com.iai.proteus.toolcontrol.jobstatus",
+							application);
+
+		Object widget = element.getObject();
+		final IProgressMonitor p = (IProgressMonitor) widget;
+		ProgressProvider provider = new ProgressProvider() {
+			@Override
+			public IProgressMonitor createMonitor(Job job) {
+				return p;
+			}
+		};
+		manager.setProgressProvider(provider);
+		
 
 		// setShowClose(true);
 
@@ -836,7 +871,7 @@ public class QuerySetPart implements MapIdentifier {
 			public void widgetSelected(SelectionEvent e) {
 				// create and open dialog to manage services
 				ManageQuerySetServicesDialog dialog = new ManageQuerySetServicesDialog(
-						parent.getShell(), activeQuerySetModel, ServiceType.SOS);
+						shell, activeQuerySetModel, ServiceType.SOS);
 				if (dialog.open() == IDialogConstants.OK_ID) {
 
 					// toggle layers - send event
@@ -935,35 +970,38 @@ public class QuerySetPart implements MapIdentifier {
 			@SuppressWarnings("serial")
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				// ISelection selection = tableViewerSosServices.getSelection();
-				// Object selected = SwtUtil.getFirstSelectedElement(selection);
-				// if (selected != null) {
-				// if (selected instanceof Service) {
-				// // get the service
-				// final Service service = (Service) selected;
-				//
-				// ColorDialog dialog =
-				// new ColorDialog(UIUtil.getShell(), SWT.NONE);
-				// // show dialog to change color
-				// RGB rgb = dialog.open();
-				// final java.awt.Color color = UIUtil.colorFromRGB(rgb);
-				// // update the color of the service
-				// service.setColor(color);
-				// // update viewer
-				// tableViewerSosServices.refresh();
-				//
-				// // send event to layer to update the color
-				// eventAdminService.sendEvent(new
-				// Event(EventTopic.QS_LAYER_SET_COLOR.toString(),
-				// new HashMap<String, Object>() {
-				// {
-				// put("object", getMapId());
-				// put("value", color);
-				// put("service", service.getEndpoint());
-				// }
-				// }));
-				// }
-				// }
+				ISelection selection = tableViewerSosServices.getSelection();
+				Object selected = SwtUtil.getFirstSelectedElement(selection);
+				if (selected != null) {
+					if (selected instanceof Service) {
+						// get the service
+						final Service service = (Service) selected;
+
+						ColorDialog dialog =
+								new ColorDialog(shell, SWT.NONE);
+						// show dialog to change color
+						RGB rgb = dialog.open();
+						final java.awt.Color color = UIUtil.colorFromRGB(rgb);
+						// update the color of the service
+						service.setColor(color);
+						// update viewer
+						tableViewerSosServices.refresh();
+						
+						// TODO: update offerings  
+						updateOfferings();
+
+						// send event to layer to update the color
+//						eventAdminService.sendEvent(new
+//								Event(EventTopic.QS_LAYER_SET_COLOR.toString(),
+//										new HashMap<String, Object>() {
+//									{
+//										put("object", getMapId());
+//										put("value", color);
+//										put("service", service.getEndpoint());
+//									}
+//								}));
+					}
+				}
 			}
 		});
 
@@ -3001,7 +3039,7 @@ public class QuerySetPart implements MapIdentifier {
 			@UIEventTopic(EventConstants.EVENT_GEO_BBOX_CLEARED) String sector) {
 		if (sector.equals("")) {
 			// clear sector 
-			activeQuerySetModel.getSosSection().setBoundingBox(null);
+			activeQuerySetModel.getSosSection().getBoundingBox().clearBoundingBox();;
 			// update UI
 			lblBoundingBoxRestriction.setText("No region currently active.");
 			// update offerings
@@ -3189,6 +3227,9 @@ public class QuerySetPart implements MapIdentifier {
 
 				// updates the selected services
 				updateSelectedServices();
+				
+				// update offerings
+				updateOfferings();
 
 				// mark as dirty
 				setDirty(true);
@@ -3256,44 +3297,89 @@ public class QuerySetPart implements MapIdentifier {
 	 * @param services
 	 */
 	private void updateOfferings() {
+		
+		Job job = new Job("Updating services") {
 
-		// collection of sensor offerings to display
-		Collection<SosOfferingObject> items = new ArrayList<>();
+			@Override
+			protected IStatus run(IProgressMonitor monitor) {
 
-		for (Service service : getServices()) {
-			if (service.isActive()) {
+				try {
 
-				// get the capabilities (will be taken from cache if possible)
-				SosCapabilities capabilities = SosUtil.getCapabilities(service
-						.getEndpoint());
+					monitor.beginTask("Updating services", 
+							getServices().size());
 
-				Collection<SensorOffering> offerings = capabilities
-						.getOfferings();
+					// collection of sensor offerings to display
+					Collection<SosOfferingObject> items = new ArrayList<>();
 
-				SosBoundingBox boundingBox = 
-						activeQuerySetModel.getSosSection().getBoundingBox();
-				
-				for (SensorOffering offering : offerings) {
-
-					// filter by region 
-					if (boundingBox != null) {
-						if (!WorldWindUtils.offeringInSection(offering, sector)) {
-							continue;
-						}
+					// get the bounding box
+					SosBoundingBox boundingBox = 
+							activeQuerySetModel.getSosSection().getBoundingBox();
+					// convert to sector if there is a bounding box 
+					Sector sector = null;
+					if (boundingBox.hasBoundingBox()) {
+						sector = Util.sectorFromSosBoundingBox(boundingBox);
 					}
 					
-					// TODO: filter by observed properties
+					for (Service service : getServices()) {
+						if (service.isActive()) {
 
-					// TODO: filter by time
+							// get the capabilities (will be taken from cache if possible)
+							SosCapabilities capabilities = SosUtil.getCapabilities(service
+									.getEndpoint());
+
+							Collection<SensorOffering> offerings = 
+									capabilities.getOfferings();
+							
+							for (SensorOffering offering : offerings) {
+
+								// filter by region, if there is one 
+								if (sector != null) {
+									if (!WorldWindUtils.offeringInSection(offering, sector)) {
+										continue;
+									}
+								}
+								
+								// TODO: filter by observed properties
+
+								// TODO: filter by time
+								
+								// TODO: filter by result format 
+
+								items.add(new SosOfferingObject(service, offering));
+							}
+						}
+						
+						monitor.worked(1);
+					}
+
+					eventBroker.post(EventConstants.EVENT_GEO_OFFERINGS_UPDATE, items);
 					
-					// TODO: filter by result format 
-
-					items.add(new SosOfferingObject(service, offering));
+				} finally {
+					monitor.done();
 				}
-			}
-		}
 
-		eventBroker.post(EventConstants.EVENT_GEO_OFFERINGS_UPDATE, items);
+				return org.eclipse.core.runtime.Status.OK_STATUS;
+			}
+		};
+		
+		// setting the progress monitor
+		IJobManager manager = Job.getJobManager();
+		MToolControl element = 
+				(MToolControl) 
+					service.find("com.iai.proteus.toolcontrol.jobstatus",
+							application);
+
+		Object widget = element.getObject();
+		final IProgressMonitor p = (IProgressMonitor) widget;
+		ProgressProvider provider = new ProgressProvider() {
+			@Override
+			public IProgressMonitor createMonitor(Job job) {
+				return p;
+			}
+		};
+		manager.setProgressProvider(provider);		
+		
+		job.schedule();		
 
 		// // create job for updating offerings
 		// Job job = new Job("Downloading Capabilities documents...") {

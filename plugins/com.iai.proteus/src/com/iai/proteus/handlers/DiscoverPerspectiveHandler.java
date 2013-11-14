@@ -18,6 +18,12 @@ import org.eclipse.e4.ui.model.application.ui.advanced.MPerspective;
 import org.eclipse.e4.ui.workbench.modeling.EModelService;
 import org.eclipse.e4.ui.workbench.modeling.EPartService;
 
+/**
+ * Handler for displaying the discover perspective 
+ * 
+ * @author b0kaj
+ *
+ */
 public class DiscoverPerspectiveHandler {
 
 	@CanExecute

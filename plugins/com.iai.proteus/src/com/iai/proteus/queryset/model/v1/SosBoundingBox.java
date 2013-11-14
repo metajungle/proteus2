@@ -11,10 +11,7 @@ public class SosBoundingBox {
 	 * Constructor
 	 */
 	public SosBoundingBox() {
-		latL = 0.0;
-		latU = 0.0;
-		lonL = 0.0;
-		lonU = 0.0;
+		clearBoundingBox();
 	}
 
 	/**
@@ -32,7 +29,13 @@ public class SosBoundingBox {
 		} else {
 			throw new IllegalArgumentException("A bounding box needs four ponints");
 		}
-		
+	}
+	
+	public void clearBoundingBox() {
+		latL = -1.0;
+		latU = -1.0;
+		lonL = -1.0;
+		lonU = -1.0;
 	}
 
 	/**
@@ -42,7 +45,7 @@ public class SosBoundingBox {
 	 * @return
 	 */
 	public boolean hasBoundingBox() {
-		if (latL == 0.0 && latU == 0.0 && lonL == 0.0 && lonU == 0.0) {
+		if (latL == -1.0 && latU == -1.0 && lonL == -1.0 && lonU == -1.0) {
 			return false;
 		}
 		return true;
