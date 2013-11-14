@@ -32,7 +32,7 @@
         <children xsi:type="menu:HandledToolItem" xmi:id="_de8hUkbzEeOuVPJZKUvhmA" label="Open" iconURI="platform:/plugin/com.iai.proteus/icons/sample.gif" command="_de76UEbzEeOuVPJZKUvhmA"/>
         <children xsi:type="menu:HandledToolItem" xmi:id="_de8hU0bzEeOuVPJZKUvhmA" label="Save" iconURI="platform:/plugin/com.iai.proteus/icons/save_edit.gif" command="_de76U0bzEeOuVPJZKUvhmA"/>
       </children>
-      <children xsi:type="menu:ToolControl" xmi:id="_oW12oE1DEeOPvrQ5NgCGlg" elementId="com.iai.proteus.toolcontrol.0" contributionURI="bundleclass://com.iai.proteus/com.iai.proteus.ui.SpaceToolControl">
+      <children xsi:type="menu:ToolControl" xmi:id="_oW12oE1DEeOPvrQ5NgCGlg" elementId="com.iai.proteus.toolcontrol.0" contributionURI="bundleclass://com.iai.proteus/com.iai.proteus.ui.SpacerToolControl">
         <tags>stretch</tags>
       </children>
       <children xsi:type="menu:ToolBar" xmi:id="_6kGtwE1CEeOPvrQ5NgCGlg" elementId="com.iai.proteus.toolbar.1">
