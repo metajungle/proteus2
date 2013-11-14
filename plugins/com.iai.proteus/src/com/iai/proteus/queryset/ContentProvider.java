@@ -29,6 +29,7 @@ public class ContentProvider implements ITreeContentProvider {
 		else if (parent instanceof ObservedPropertiesHolder) {
 			ObservedPropertiesHolder holder =
 					(ObservedPropertiesHolder) parent;
+			Object[] objs = holder.getCategories().toArray();
 			return holder.getCategories().toArray();
 		} else if (parent instanceof Category) {
 			Category category = (Category) parent;

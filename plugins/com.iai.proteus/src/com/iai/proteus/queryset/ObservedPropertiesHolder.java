@@ -6,12 +6,11 @@
 package com.iai.proteus.queryset;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
-
-import com.iai.proteus.queryset.FacetData;
 
 public class ObservedPropertiesHolder {
 
@@ -101,6 +100,16 @@ public class ObservedPropertiesHolder {
 	}
 
 	/**
+	 * Sets the observed properties 
+	 * 
+	 * @param properties
+	 */
+	public void setCategories(Collection<String> properties) {
+		categories = categorize(properties);
+	}
+	
+
+	/**
 	 * Returns the observed properties, organized by categories
 	 *
 	 * @return
@@ -112,16 +121,16 @@ public class ObservedPropertiesHolder {
 	/**
 	 * Organizes the observed properties
 	 *
-	 * @param collection
+	 * @param properties
 	 * @return
 	 */
-	private List<Category> categorize(List<String> collection) {
+	private List<Category> categorize(Collection<String> properties) {
 
 		Map<String, List<ObservedProperty>> structure =
 				new HashMap<String, List<ObservedProperty>>();
 
 		// go through all the items in the collection
-		for (String property : collection) {
+		for (String property : properties) {
 
 			if (property == null)
 				continue;

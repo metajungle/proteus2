@@ -181,6 +181,18 @@ public class QuerySet implements ServiceManager {
 		}
 
 		/**
+		 * Returns true if the given observed property is included  
+		 * 
+		 * @param observedProperty
+		 * @return
+		 */
+		public boolean containsObservedProperty(String observedProperty) {
+			SosObservedProperty property = new SosObservedProperty();
+			property.observedProperty = observedProperty;
+			return getObservedProperties().contains(property);
+		}
+		
+		/**
 		 * Returns the bounding box 
 		 * 
 		 * @return the boundingBox

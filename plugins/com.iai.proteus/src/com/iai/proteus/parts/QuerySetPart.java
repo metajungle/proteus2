@@ -33,6 +33,7 @@ import org.eclipse.e4.core.services.events.IEventBroker;
 import org.eclipse.e4.ui.di.Focus;
 import org.eclipse.e4.ui.di.Persist;
 import org.eclipse.e4.ui.di.UIEventTopic;
+import org.eclipse.e4.ui.di.UISynchronize;
 import org.eclipse.e4.ui.model.application.MApplication;
 import org.eclipse.e4.ui.model.application.ui.MDirtyable;
 import org.eclipse.e4.ui.model.application.ui.menu.MToolControl;
@@ -143,7 +144,6 @@ import com.iai.proteus.queryset.Category;
 import com.iai.proteus.queryset.ContentProvider;
 import com.iai.proteus.queryset.Facet;
 import com.iai.proteus.queryset.FacetChangeToggle;
-import com.iai.proteus.queryset.FacetData;
 import com.iai.proteus.queryset.FormatFacet;
 import com.iai.proteus.queryset.LabelProvider;
 import com.iai.proteus.queryset.ObservedPropertiesFilter;
@@ -172,6 +172,9 @@ public class QuerySetPart implements MapIdentifier {
 
 	@Inject 
 	private Shell shell; 
+	
+	@Inject 
+	UISynchronize sync;
 	
 	@Inject
 	EModelService service;
@@ -991,7 +994,7 @@ public class QuerySetPart implements MapIdentifier {
 						// update viewer
 						tableViewerSosServices.refresh();
 						
-						// TODO: update offerings  
+						// update offerings  
 						updateOfferings();
 
 						// send event to layer to update the color
@@ -1158,17 +1161,8 @@ public class QuerySetPart implements MapIdentifier {
 				// clear selected observed properties
 				// selectedObservedProperties.clear();
 				activeQuerySetModel.getSosSection().clearObservedProperties();
-				// TODO: update items
-
-				// // clear OBSERVED PROPERTIES facets
-				// eventAdminService.sendEvent(new
-				// Event(EventTopic.QS_FACET_CLEARED.toString(),
-				// new HashMap<String, Object>() {
-				// {
-				// put("object", getMapId());
-				// put("value", Facet.OBSERVED_PROPERTY);
-				// }
-				// }));
+				// update items
+				updateOfferings();
 			}
 		});
 
@@ -1330,15 +1324,26 @@ public class QuerySetPart implements MapIdentifier {
 						if (item.getChecked()) {
 							activeQuerySetModel.getSosSection()
 									.addObservedProperty(p);
-							// selectedObservedProperties.add(p);
 						} else {
 							activeQuerySetModel.getSosSection()
 									.removeObservedProperty(p);
-							// selectedObservedProperties.remove(p);
 						}
 					} else if (data instanceof Category) {
-						System.err.println("TODO: implement me");
+						Category category = (Category) data;
+						for (ObservedProperty property : category.getObservedProperties()) {
+							String p = property.getObservedProperty();
+							if (item.getChecked()) {
+								activeQuerySetModel.getSosSection()
+										.addObservedProperty(p);
+							} else {
+								activeQuerySetModel.getSosSection()
+										.removeObservedProperty(p);
+							}
+						}
 					}
+					// update offerings 
+					updateOfferings();
+					
 					//
 					// // collect all the facet changes
 					// final Collection<FacetChangeToggle> changes =
@@ -1378,12 +1383,12 @@ public class QuerySetPart implements MapIdentifier {
 				.addCheckStateListener(new ICheckStateListener() {
 					@Override
 					public void checkStateChanged(CheckStateChangedEvent event) {
-						// Object elmt = event.getElement();
-						// if (elmt instanceof ObservedProperty) {
-						// ObservedProperty op = (ObservedProperty) elmt;
-						// // update model element
-						// op.setChecked(event.getChecked());
-						// }
+						Object elmt = event.getElement();
+						if (elmt instanceof ObservedProperty) {
+							ObservedProperty op = (ObservedProperty) elmt;
+							// update model element
+							op.setChecked(event.getChecked());
+						}
 					}
 				});
 
@@ -1391,190 +1396,55 @@ public class QuerySetPart implements MapIdentifier {
 				.setCheckStateProvider(new ICheckStateProvider() {
 					@Override
 					public boolean isGrayed(Object element) {
-						// if (element instanceof Category) {
-						// Category category = (Category) element;
-						// // a category is grayed if some and only some
-						// children
-						// // are checked
-						// boolean some = false;
-						// boolean all = true;
-						// for (ObservedProperty property :
-						// category.getObservedProperties()) {
-						// if (isActiveFacet(property))
-						// some = true;
-						// else
-						// all = false;
-						// }
-						// return some && !all;
-						// }
+						 if (element instanceof Category) {
+							Category category = (Category) element;
+							// a category is grayed if some and only some
+							// children are checked
+							boolean some = false;
+							boolean all = true;
+							for (ObservedProperty property : category
+									.getObservedProperties()) {
+								if (isActiveFacet(property))
+									some = true;
+								else
+									all = false;
+							}
+							return some && !all;
+						}
 						// default
 						return false;
 					}
 
 					@Override
 					public boolean isChecked(Object element) {
-						// if (element instanceof Category) {
-						// Category category = (Category) element;
-						// // a category is considered checked if some of its
-						// children
-						// // are checked (isGrayed() also has to be considered)
-						// boolean checked = false;
-						// for (ObservedProperty property :
-						// category.getObservedProperties()) {
-						// if (isActiveFacet(property)) {
-						// checked = true;
-						// break;
-						// }
-						// }
-						// return checked;
-						// } else if (element instanceof ObservedProperty) {
-						// // an observed property is checked if it is an active
-						// facet
-						// ObservedProperty property = (ObservedProperty)
-						// element;
-						// if (isActiveFacet(property)) {
-						// return true;
-						// }
-						// }
+						if (element instanceof Category) {
+							Category category = (Category) element;
+							// a category is considered checked if some of its
+							// children
+							// are checked (isGrayed() also has to be
+							// considered)
+							boolean checked = false;
+							for (ObservedProperty property : category
+									.getObservedProperties()) {
+								if (isActiveFacet(property)) {
+									checked = true;
+									break;
+								}
+							}
+							return checked;
+						} else if (element instanceof ObservedProperty) {
+							// an observed property is checked if it is an
+							// active
+							// facet
+							ObservedProperty property = (ObservedProperty) element;
+							if (isActiveFacet(property)) {
+								return true;
+							}
+						}
 						return false;
 					}
 				});
 
-		final Group groupDiscovery = new Group(stackProperties, SWT.NONE);
-		groupDiscovery.setLayout(new GridLayout(1, false));
-		groupDiscovery.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true,
-				false));
-		groupDiscovery.setText("Discover via Catalog");
-
-		final ToolBar toolBarDiscoveryHelp = new ToolBar(groupDiscovery,
-				SWT.FLAT | SWT.RIGHT);
-		toolBarDiscoveryHelp.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER,
-				true, false));
-
-		// tool bar item that shows some help information
-		final ToolItem tltmDiscoveryHelp = new ToolItem(toolBarDiscoveryHelp,
-				SWT.NONE);
-		tltmDiscoveryHelp.setText("");
-		tltmDiscoveryHelp.setImage(imgQuestion);
-		tltmDiscoveryHelp.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent event) {
-				// // create the help controller
-				// SwtUtil.createHelpController(stackProperties,
-				// tltmDiscoveryHelp, groupDiscovery,
-				// "Use 'Discover' to search CSWs for SOSs."
-				// );
-			}
-		});
-
-		// discovery button
-		Button btnDiscover = new Button(groupDiscovery, SWT.NONE);
-		btnDiscover
-				.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
-		btnDiscover.setText("Discover");
-		btnDiscover.setImage(imgMagnifier);
-
-		// add discovery to query set
-		// final Button btnAddToQuerySet = new Button(groupDiscovery, SWT.NONE);
-		// btnAddToQuerySet.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true,
-		// false));
-		// btnAddToQuerySet.setText("Save services");
-		// btnAddToQuerySet.setImage(imgSave);
-		// // default
-		// btnAddToQuerySet.setEnabled(false);
-
-		btnDiscover.addSelectionListener(new SelectionAdapter() {
-			@SuppressWarnings("serial")
-			@Override
-			public void widgetSelected(SelectionEvent event) {
-
-				// automatically select 'mode'
-				tltmPropertiesMode.setSelection(true);
-				// update image
-				tltmPropertiesMode.setImage(imgEyeHalf);
-				// send update request
-				// eventAdminService.sendEvent(new
-				// Event(EventTopic.QS_FACET_CHANGED.toString(),
-				// new HashMap<String, Object>() {
-				// {
-				// put("object", getMapId());
-				// put("value", new ArrayList<FacetChangeToggle>());
-				// put("mode", FacetDisplayStrategy.SHOW_SELECTED);
-				// }
-				// }));
-
-				// TODO: update sos offering layer (needed?)
-
-				Job job = new Job("Finding Sensor Observation Services") {
-					@Override
-					protected IStatus run(IProgressMonitor monitor) {
-
-						// final Collection<Service> sosServices =
-						// new HashSet<Service>();
-						//
-						// try {
-						//
-						// monitor.beginTask("Contacting CSWs...", 1);
-						//
-						// // get services from NOAA/IOOS CSW
-						// Collection<Service> foundServices =
-						// new NoaaGeoportalCsw().searchForSos();
-						//
-						// monitor.beginTask("Parsing Capabilities...",
-						// foundServices.size());
-						//
-						// for (Service service : foundServices) {
-						//
-						// SosCapabilities caps =
-						// SosUtil.getCapabilities(service.getEndpoint());
-						//
-						// // make sure we could parse the Capabilities
-						// // document
-						// if (caps != null) {
-						//
-						// String name = SosUtil.getServiceTitle(caps);
-						// if (name != null)
-						// service.setName(name);
-						//
-						// // collect SOSs
-						// sosServices.add(service);
-						// }
-						//
-						// monitor.worked(1);
-						// }
-						//
-						// } catch (IOException e) {
-						// log.error("IO Exception: " + e.getMessage());
-						// } finally {
-						// monitor.done();
-						// }
-						//
-						// // send event to update
-						// eventAdminService.sendEvent(new
-						// Event(EventTopic.QS_TOGGLE_SERVICES.toString(),
-						// new HashMap<String, Object>() {
-						// {
-						// put("object", getMapId());
-						// put("value", sosServices);
-						// }
-						// }));
-
-						return org.eclipse.core.runtime.Status.OK_STATUS;
-					}
-				};
-				job.setUser(true);
-				job.schedule();
-			}
-		});
-
-		// listener to add selected observed properties and their services
-		// to the query set
-		// btnAddToQuerySet.addSelectionListener(new SelectionAdapter() {
-		// @Override
-		// public void widgetSelected(SelectionEvent event) {
-		//
-		// }
-		// });
 
 		/*
 		 * STACK: time
@@ -3268,10 +3138,33 @@ public class QuerySetPart implements MapIdentifier {
 	@SuppressWarnings("serial")
 	public void updateSelectedServices() {
 
+		Collection<String> properties = new HashSet<>();
+		
 		// count the active services
 		int countActiveServices = 0;
-		for (Service service : getServices())
+		for (Service service : getServices()) {
 			countActiveServices += (service.isActive() ? 1 : 0);
+			
+			// update available observed properties
+			if (service.isActive()) {
+				// get the capabilities (will be taken from cache if possible)
+				SosCapabilities capabilities = 
+						SosUtil.getCapabilities(service.getEndpoint());
+				Collection<SensorOffering> offerings = 
+						capabilities.getOfferings();
+				for (SensorOffering offering : offerings) {
+					properties.addAll(offering.getObservedProperties());
+				}
+			}
+		}
+		
+		updateObservedProperties(properties, 0);
+		
+//		// update offerings
+//		observedPropertiesHolder.setCategories(properties);
+//		
+//		treeViewerObservedProperties.refresh(true);
+		
 
 		// update model
 		// updateQuerySetModel(getServices());
@@ -3292,7 +3185,7 @@ public class QuerySetPart implements MapIdentifier {
 		// update live services tile
 		updateLiveTileServices(countActiveServices);
 	}
-
+	
 	/**
 	 * Update the offerings that should be displayed on the map that corresponds
 	 * to the current set of search constraints
@@ -3315,9 +3208,10 @@ public class QuerySetPart implements MapIdentifier {
 					// collection of sensor offerings to display
 					Collection<SosOfferingObject> items = new ArrayList<>();
 
+					QuerySet.SosSection sosSection = activeQuerySetModel.getSosSection();
+					
 					// get the bounding box
-					SosBoundingBox boundingBox = 
-							activeQuerySetModel.getSosSection().getBoundingBox();
+					SosBoundingBox boundingBox = sosSection.getBoundingBox();
 					// convert to sector if there is a bounding box 
 					Sector sector = null;
 					if (boundingBox.hasBoundingBox()) {
@@ -3328,8 +3222,8 @@ public class QuerySetPart implements MapIdentifier {
 						if (service.isActive()) {
 
 							// get the capabilities (will be taken from cache if possible)
-							SosCapabilities capabilities = SosUtil.getCapabilities(service
-									.getEndpoint());
+							SosCapabilities capabilities = 
+									SosUtil.getCapabilities(service.getEndpoint());
 
 							Collection<SensorOffering> offerings = 
 									capabilities.getOfferings();
@@ -3343,8 +3237,22 @@ public class QuerySetPart implements MapIdentifier {
 									}
 								}
 								
-								// TODO: filter by observed properties
-
+								// filter by observed properties
+								boolean match = false;
+								if (sosSection.getObservedProperties().size() == 0) {
+									match = true;
+								} else {
+									for (String property : offering.getObservedProperties()) {
+										if (sosSection.containsObservedProperty(property)) {
+											match = true;
+											break;
+										}
+									}
+								}
+								if (!match) {
+									continue;
+								}
+								
 								// TODO: filter by time
 								
 								// TODO: filter by result format 
@@ -3366,6 +3274,8 @@ public class QuerySetPart implements MapIdentifier {
 			}
 		};
 		
+		// TODO: we should be able to set this more generally, 
+		//       either after @PostConstruct or in LifeCycleManager
 		// setting the progress monitor
 		IJobManager manager = Job.getJobManager();
 		MToolControl element = 
@@ -4040,11 +3950,12 @@ public class QuerySetPart implements MapIdentifier {
 	/**
 	 * Updates the observed properties for this query set
 	 * 
-	 * @param facetData
+	 * @param properties
 	 * @param noMatchingOfferings
 	 */
-	public void updateObservedProperties(final FacetData facetData,
-			final int noMatchingOfferings) {
+	private void updateObservedProperties(final Collection<String> properties,
+			final int noMatchingOfferings) 
+	{
 
 		// collect the selected observed properties
 		final int checked = getSelectedObservedProperties().size();
@@ -4059,7 +3970,7 @@ public class QuerySetPart implements MapIdentifier {
 		}
 
 		// update the viewer model
-		observedPropertiesHolder.setCategories(facetData);
+		observedPropertiesHolder.setCategories(properties);
 
 		// update model information (state: active/inactive)
 		for (Category cat : observedPropertiesHolder.getCategories()) {
@@ -4077,10 +3988,10 @@ public class QuerySetPart implements MapIdentifier {
 		// reset the active observed properties
 		activeObservedPropertyURIs.clear();
 
-		UIUtil.update(new Runnable() {
+		// update the UI
+		sync.asyncExec(new Runnable() {
 			@Override
 			public void run() {
-
 				if (checked > 0) {
 					itemClearProperties.setEnabled(true);
 				} else {

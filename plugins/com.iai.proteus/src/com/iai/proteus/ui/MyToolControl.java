@@ -18,8 +18,6 @@ public class MyToolControl implements IProgressMonitor {
 
 	@PostConstruct
 	public void createControls(Composite parent) {
-//		parent.setLayout(new RowLayout());
-//		new Label(parent, SWT.NONE).setText("Status bar");
 		progressBar = new ProgressBar(parent, SWT.SMOOTH);
 		progressBar.setBounds(100, 10, 200, 20);
 		progressBar.setVisible(false);
