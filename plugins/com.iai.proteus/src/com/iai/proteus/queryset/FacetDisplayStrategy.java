@@ -6,7 +6,7 @@
 package com.iai.proteus.queryset;
 
 /**
- * Used to control how facets are displayed on the map
+ * Used to control how facet selection are displayed 
  * 
  * @author Jakob Henriksson
  *

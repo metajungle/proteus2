@@ -3,13 +3,16 @@
  * 
  * All Rights Reserved.
  */
-package com.iai.proteus.queryset;
+package com.iai.proteus.ui;
 
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.swt.graphics.Image;
 
 import com.iai.proteus.common.Labeling;
+import com.iai.proteus.queryset.Category;
+import com.iai.proteus.queryset.SosOfferingObject;
+import com.iai.proteus.ui.model.ObservedProperty;
 
 /**
  * Simple label provider for viewers 

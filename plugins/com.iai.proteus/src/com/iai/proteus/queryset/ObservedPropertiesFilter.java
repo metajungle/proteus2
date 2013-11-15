@@ -9,6 +9,7 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 
 import com.iai.proteus.common.Labeling;
+import com.iai.proteus.ui.model.ObservedProperty;
 
 /**
  * Viewer filter for observed properties 

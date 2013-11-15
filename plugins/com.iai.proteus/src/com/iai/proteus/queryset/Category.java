@@ -5,8 +5,10 @@
  */
 package com.iai.proteus.queryset;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
+import java.util.HashSet;
+
+import com.iai.proteus.ui.model.ObservedProperty;
 
 /**
  * Model object for categorizes that are used for organizing 
@@ -18,7 +20,7 @@ import java.util.List;
 public class Category {
 
 	private String name;
-	private List<ObservedProperty> observedProperties;
+	private Collection<ObservedProperty> observedProperties;
 
 	/**
 	 * Constructor 
@@ -27,19 +29,64 @@ public class Category {
 	 */
 	public Category(String name) {
 		this.name = name;
-		observedProperties = new ArrayList<ObservedProperty>();
+		observedProperties = new HashSet<>();
+	}
+	
+	/**
+	 * Sets the name of the category 
+	 * 
+	 * @param name
+	 */
+	public void setName(String name) {
+		this.name = name;
 	}
 
+	/**
+	 * Returns the name of the category 
+	 * 
+	 * @return
+	 */
 	public String getName() {
 		return name;
 	}
 
-	public void setObservedProperties(List<ObservedProperty> observedProperties) {
-		this.observedProperties = observedProperties;
+	/**
+	 * Adds an observed property to the category 
+	 * 
+	 * @param p
+	 * @return
+	 */
+	public boolean addObservedProperty(ObservedProperty p) {
+		return observedProperties.add(p);
 	}
 
-	public List<ObservedProperty> getObservedProperties() {
+	/**
+	 * Returns the observed properties in the category 
+	 * 
+	 * @return
+	 */
+	public Collection<ObservedProperty> getObservedProperties() {
 		return observedProperties;
+	}
+
+	/**
+	 * Selects all observed properties in the category 
+	 * 
+	 */
+	public void select() {
+		for (ObservedProperty property : getObservedProperties()) {
+			property.select();
+		}
+	}
+	
+	/**
+	 * De-selects all observed properties in the category  
+	 * 
+	 */
+	public void deselect() {
+		for (ObservedProperty property : getObservedProperties()) {
+			property.deselect();
+		}
 	}
 
 	@Override

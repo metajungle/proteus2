@@ -349,6 +349,17 @@ public class QuerySet implements ServiceManager {
 	}
 
 	/**
+	 * Clears all services 
+	 * 
+	 * Implements {@link ServiceManager}
+	 * 
+	 */
+	@Override
+	public void clearAll() {
+		sosSection.sosServices.clear();
+	}
+	
+	/**
 	 * Returns the services for this query set
 	 * 
 	 * Implements @{link ServiceManager}

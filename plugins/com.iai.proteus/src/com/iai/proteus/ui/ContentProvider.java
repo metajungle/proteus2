@@ -3,13 +3,24 @@
  * 
  * All Rights Reserved.
  */
-package com.iai.proteus.queryset;
+package com.iai.proteus.ui;
 
 import java.util.Collection;
 
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 
+import com.iai.proteus.queryset.AvailableFormatsHolder;
+import com.iai.proteus.queryset.Category;
+import com.iai.proteus.ui.model.ObservedPropertyModel;
+import com.iai.proteus.ui.model.SensorOfferingModel;
+
+/**
+ * Content provider for UI viewers  
+ * 
+ * @author b0kaj
+ *
+ */
 public class ContentProvider implements ITreeContentProvider {
 
 	Object[] EMPTY_ARRAY = new Object[0];
@@ -22,14 +33,13 @@ public class ContentProvider implements ITreeContentProvider {
 			return ((Collection<?>) parent).toArray();
 		} 
 		// sensor offerings
-		else if (parent instanceof SensorOfferingsHolder) {
-			return ((SensorOfferingsHolder) parent).getSensorOfferings().toArray();
+		else if (parent instanceof SensorOfferingModel) {
+			return ((SensorOfferingModel) parent).getSensorOfferings().toArray();
 		}
 		// observed properties
-		else if (parent instanceof ObservedPropertiesHolder) {
-			ObservedPropertiesHolder holder =
-					(ObservedPropertiesHolder) parent;
-			Object[] objs = holder.getCategories().toArray();
+		else if (parent instanceof ObservedPropertyModel) {
+			ObservedPropertyModel holder =
+					(ObservedPropertyModel) parent;
 			return holder.getCategories().toArray();
 		} else if (parent instanceof Category) {
 			Category category = (Category) parent;

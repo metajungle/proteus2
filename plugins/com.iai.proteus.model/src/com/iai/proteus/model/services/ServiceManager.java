@@ -14,11 +14,13 @@ import java.util.Collection;
  *
  */
 public interface ServiceManager {
-	
+
 	// returns true if the service was added, false otherwise 
 	public boolean addService(Service service);
 	// returns true if the service was removed, false otherwise
 	public boolean removeService(Service service);
+	// clears all services
+	public void clearAll();
 	
 	// returns all services
 	public Collection<Service> getServices();

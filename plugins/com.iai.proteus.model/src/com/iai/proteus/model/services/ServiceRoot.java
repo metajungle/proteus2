@@ -39,7 +39,7 @@ public class ServiceRoot extends Model implements Iterable<Service>, ServiceMana
 	/**
 	 * Returns all services
 	 *
-	 * Implements @{link ServiceManager}
+	 * Implements {@link ServiceManager}
 	 *
 	 * @return the services
 	 */
@@ -51,7 +51,7 @@ public class ServiceRoot extends Model implements Iterable<Service>, ServiceMana
 	/**
 	 * Return services of the given type 
 	 * 
-	 * Implements @{link ServiceManager}
+	 * Implements {@link ServiceManager}
 	 * 
 	 * @param type
 	 * @return
@@ -78,7 +78,7 @@ public class ServiceRoot extends Model implements Iterable<Service>, ServiceMana
 	/**
 	 * Adds a service
 	 *
-	 * Implements @{link ServiceManager} 
+	 * Implements {@link ServiceManager}
 	 *
 	 * @param service
 	 * @return true if service was removed, false otherwise 
@@ -96,7 +96,7 @@ public class ServiceRoot extends Model implements Iterable<Service>, ServiceMana
 	/**
 	 * Removes a service
 	 * 
-	 * Implements @{link ServiceManager}
+	 * Implements {@link ServiceManager}
 	 * 
 	 * @param service
 	 * @returns true if service was removed, false otherwise
@@ -104,6 +104,17 @@ public class ServiceRoot extends Model implements Iterable<Service>, ServiceMana
 	@Override
 	public synchronized boolean removeService(Service service) {
 		return services.remove(service);
+	}
+	
+	/**
+	 * Clears all services 
+	 * 
+	 * Implements {@link ServiceManager}
+	 * 
+	 */
+	@Override
+	public void clearAll() {
+		services.clear();
 	}
 
 	/**
@@ -121,7 +132,7 @@ public class ServiceRoot extends Model implements Iterable<Service>, ServiceMana
 	}
 
 	/**
-	 * Returns true if the service url is already in the list of services,
+	 * Returns true if the service URL is already in the list of services,
 	 * false otherwise
 	 *
 	 * @param serviceUrl

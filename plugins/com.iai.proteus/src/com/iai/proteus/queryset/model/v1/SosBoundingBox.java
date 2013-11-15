@@ -1,5 +1,11 @@
 package com.iai.proteus.queryset.model.v1;
 
+/**
+ * A bounding box 
+ * 
+ * @author b0kaj
+ *
+ */
 public class SosBoundingBox {
 	
 	Double latL;

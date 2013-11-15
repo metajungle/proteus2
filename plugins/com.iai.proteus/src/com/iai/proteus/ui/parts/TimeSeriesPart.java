@@ -9,7 +9,7 @@
  *     IBM Corporation - initial API and implementation
  *     Lars Vogel <lars.Vogel@gmail.com> - Bug 419770
  *******************************************************************************/
-package com.iai.proteus.parts;
+package com.iai.proteus.ui.parts;
 
 import java.awt.Color;
 

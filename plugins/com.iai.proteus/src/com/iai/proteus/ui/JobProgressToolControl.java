@@ -9,7 +9,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.ProgressBar;
 
-public class MyToolControl implements IProgressMonitor {
+public class JobProgressToolControl implements IProgressMonitor {
 
 	private ProgressBar progressBar;
 
@@ -25,11 +25,9 @@ public class MyToolControl implements IProgressMonitor {
 
 	@Override
 	public void worked(final int work) {
-		System.out.println("Worked: " + work);
 		sync.syncExec(new Runnable() {
 			@Override
 			public void run() {
-				System.out.println("Worked");
 				progressBar.setSelection(progressBar.getSelection() + work);
 			}
 		});
@@ -61,7 +59,6 @@ public class MyToolControl implements IProgressMonitor {
 
 	@Override
 	public void done() {
-		System.out.println("Done");
 		sync.syncExec(new Runnable() {
 			@Override
 			public void run() {
@@ -74,7 +71,6 @@ public class MyToolControl implements IProgressMonitor {
 
 	@Override
 	public void beginTask(final String name, final int totalWork) {
-		System.out.println("Begin: " + name);
 		sync.syncExec(new Runnable() {
 			@Override
 			public void run() {
@@ -84,7 +80,5 @@ public class MyToolControl implements IProgressMonitor {
 				progressBar.setToolTipText(name);
 			}
 		});
-		System.out.println("Starting");
-		
 	}
 } 

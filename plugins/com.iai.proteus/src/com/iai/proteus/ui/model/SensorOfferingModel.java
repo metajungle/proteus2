@@ -3,12 +3,20 @@
  * 
  * All Rights Reserved.
  */
-package com.iai.proteus.queryset;
+package com.iai.proteus.ui.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
-public class SensorOfferingsHolder {
+import com.iai.proteus.queryset.SosOfferingObject;
+
+/**
+ * Model for sensor offering UI viewers 
+ * 
+ * @author b0kaj
+ *
+ */
+public class SensorOfferingModel {
 
 	/*
 	 * Holds the sensor offerings
@@ -19,7 +27,7 @@ public class SensorOfferingsHolder {
 	 * Constructor
 	 *
 	 */
-	public SensorOfferingsHolder() {
+	public SensorOfferingModel() {
 
 		sensorOfferings = new ArrayList<SosOfferingObject>();
 	}

@@ -3,7 +3,7 @@
  * 
  * All Rights Reserved.
  */
-package com.iai.proteus.queryset;
+package com.iai.proteus.ui.model;
 
 /**
  * Model object for observed properties 
@@ -14,7 +14,7 @@ package com.iai.proteus.queryset;
 public class ObservedProperty {
 
 	private String observedProperty;
-	private boolean checked; 
+	private boolean selected; 
 
 	/**
 	 * Constructor 
@@ -23,7 +23,7 @@ public class ObservedProperty {
 	 */
 	public ObservedProperty(String observedProperty) {
 		this.observedProperty = observedProperty;
-		checked = false;
+		selected = false;
 	}
 	
 	public String getObservedProperty() {
@@ -40,15 +40,31 @@ public class ObservedProperty {
 	/**
 	 * @return the checked
 	 */
-	public boolean isChecked() {
-		return checked;
+	public boolean isSelected() {
+		return selected;
 	}
 
 	/**
-	 * @param checked the checked to set
+	 * @param selected the checked to set
 	 */
-	public void setChecked(boolean checked) {
-		this.checked = checked;
+	public void setSelected(boolean selected) {
+		this.selected = selected;
+	}
+	
+	/**
+	 * Convenience 
+	 * 
+	 */
+	public void select() {
+		setSelected(true);
+	}
+	
+	/**
+	 * Convenience 
+	 * 
+	 */
+	public void deselect() {
+		setSelected(false);
 	}
 
 	@Override

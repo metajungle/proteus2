@@ -3,7 +3,7 @@
  * 
  * All Rights Reserved.
  */
-package com.iai.proteus.parts;
+package com.iai.proteus.ui.parts;
 
 import gov.nasa.worldwind.Model;
 import gov.nasa.worldwind.WorldWind;
