@@ -712,25 +712,6 @@ public class QuerySetPart implements MapIdentifier {
 		updateLiveTileRegion(0L);
 
 		/*
-		 * TIME
-		 */
-
-		tileTime = new Composite(tiles, SWT.BORDER);
-		GridLayout gl_tileTime = new GridLayout(1, false);
-		gl_tileTime.marginWidth = 0;
-		gl_tileTime.marginHeight = 0;
-		tileTime.setLayout(gl_tileTime);
-		tileTime.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false,
-				1, 1));
-		tileTime.setCursor(cursor);
-
-		createLiveTop(Tile.TIME, tileTime, "Time");
-		liveTime = createLiveTile(tileTime);
-		// set and update the live tile text
-		liveTime.setText("");
-		updateLiveTileTime(TimeFacet.ALL, 0);
-
-		/*
 		 * OBSERVED PROPERTIES
 		 */
 
@@ -749,6 +730,25 @@ public class QuerySetPart implements MapIdentifier {
 		liveProperties.setText("");
 		updateLiveTileObservedProperties(0, 0);
 
+		/*
+		 * TIME
+		 */
+
+		tileTime = new Composite(tiles, SWT.BORDER);
+		GridLayout gl_tileTime = new GridLayout(1, false);
+		gl_tileTime.marginWidth = 0;
+		gl_tileTime.marginHeight = 0;
+		tileTime.setLayout(gl_tileTime);
+		tileTime.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false,
+				1, 1));
+		tileTime.setCursor(cursor);
+
+		createLiveTop(Tile.TIME, tileTime, "Time");
+		liveTime = createLiveTile(tileTime);
+		// set and update the live tile text
+		liveTime.setText("");
+		updateLiveTileTime(TimeFacet.ALL, 0);
+		
 		/*
 		 * FORMATS
 		 */
