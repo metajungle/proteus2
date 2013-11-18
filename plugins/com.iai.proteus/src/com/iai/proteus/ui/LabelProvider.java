@@ -11,7 +11,7 @@ import org.eclipse.swt.graphics.Image;
 
 import com.iai.proteus.common.Labeling;
 import com.iai.proteus.queryset.Category;
-import com.iai.proteus.queryset.SosOfferingObject;
+import com.iai.proteus.queryset.SosSensorOffering;
 import com.iai.proteus.ui.model.ObservedProperty;
 
 /**
@@ -32,8 +32,8 @@ public class LabelProvider implements ILabelProvider {
 		/*
 		 * Sensor offerings
 		 */
-		if (element instanceof SosOfferingObject) {
-			SosOfferingObject item = (SosOfferingObject) element;
+		if (element instanceof SosSensorOffering) {
+			SosSensorOffering item = (SosSensorOffering) element;
 			return item.getSensorOffering().getGmlId();
 		}
 		/*

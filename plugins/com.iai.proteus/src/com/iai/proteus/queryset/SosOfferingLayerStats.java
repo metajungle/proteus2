@@ -14,7 +14,7 @@ import java.util.Map;
 public class SosOfferingLayerStats {
 
 	Map<String, Integer> propertyCount = new HashMap<String, Integer>();
-	Collection<SosOfferingObject> sensorOfferingItems = new ArrayList<SosOfferingObject>();
+	Collection<SosSensorOffering> sensorOfferingItems = new ArrayList<SosSensorOffering>();
 	Collection<String> formats = new HashSet<String>();
 
 	// all offerings
@@ -51,7 +51,7 @@ public class SosOfferingLayerStats {
 	/**
 	 * @return the sensorOfferingItems
 	 */
-	public Collection<SosOfferingObject> getSensorOfferingItems() {
+	public Collection<SosSensorOffering> getSensorOfferingItems() {
 		return sensorOfferingItems;
 	}
 
@@ -59,7 +59,7 @@ public class SosOfferingLayerStats {
 	 * @param sensorOfferingItems the sensorOfferingItems to set
 	 */
 	public void setSensorOfferingItems(
-			Collection<SosOfferingObject> sensorOfferingItems) {
+			Collection<SosSensorOffering> sensorOfferingItems) {
 		this.sensorOfferingItems = sensorOfferingItems;
 	}
 

@@ -8,7 +8,9 @@ package com.iai.proteus.ui.model;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import com.iai.proteus.queryset.SosOfferingObject;
+import com.iai.proteus.common.sos.model.SensorOffering;
+import com.iai.proteus.model.services.Service;
+import com.iai.proteus.queryset.SosSensorOffering;
 
 /**
  * Model for sensor offering UI viewers 
@@ -21,7 +23,7 @@ public class SensorOfferingModel {
 	/*
 	 * Holds the sensor offerings
 	 */
-	private Collection<SosOfferingObject> sensorOfferings;
+	private Collection<SosSensorOffering> sensorOfferings;
 
 	/**
 	 * Constructor
@@ -29,24 +31,50 @@ public class SensorOfferingModel {
 	 */
 	public SensorOfferingModel() {
 
-		sensorOfferings = new ArrayList<SosOfferingObject>();
+		sensorOfferings = new ArrayList<SosSensorOffering>();
 	}
 
 	/**
-	 * Sets the sensor offerings
-	 *
-	 * @param sensorOfferings
+	 * Clears the model 
+	 * 
 	 */
-	public void setSensorOfferings(Collection<SosOfferingObject> sensorOfferings) {
-		this.sensorOfferings = sensorOfferings;
+	public void clear() {
+		sensorOfferings.clear();
 	}
-
+	
+	/**
+	 * Adds an offering using {@link Service} and {@link SensorOffering} objects
+	 * 
+	 * @param service
+	 * @param sensorOffering
+	 * @return
+	 */
+	public boolean addSosSensorOffering(Service service, SensorOffering sensorOffering) {
+		return addSosSensorOffering(new SosSensorOffering(service, sensorOffering));
+	}
+	
+	/**
+	 * Adds an offering to the model 
+	 * 
+	 * @param sensorOffering
+	 * @return True if the offering was added, false otherwise 
+	 */
+	public boolean addSosSensorOffering(SosSensorOffering sensorOffering) {
+		if (sensorOffering == null) {
+			System.err.println("It was null!");
+		}
+		if (!sensorOfferings.contains(sensorOffering)) {
+			return sensorOfferings.add(sensorOffering);
+		}
+		return false;
+	}
+	
 	/**
 	 * Returns the sensor offerings
 	 *
 	 * @return
 	 */
-	public Collection<SosOfferingObject> getSensorOfferings() {
+	public Collection<SosSensorOffering> getSosSensorOfferings() {
 		return sensorOfferings;
 	}
 

@@ -9,7 +9,7 @@ import java.util.Collection;
 
 public interface QuerySetContributor {
 
-	public Collection<SosOfferingObject> getSensorOfferingsContribution();
+	public Collection<SosSensorOffering> getSensorOfferingsContribution();
 	public FacetData getObservedPropertiesContribution();
 
 }

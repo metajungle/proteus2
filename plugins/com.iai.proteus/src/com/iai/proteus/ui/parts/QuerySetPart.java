@@ -147,7 +147,7 @@ import com.iai.proteus.queryset.FacetChangeToggle;
 import com.iai.proteus.queryset.FacetDisplayStrategy;
 import com.iai.proteus.queryset.FormatFacet;
 import com.iai.proteus.queryset.ObservedPropertiesFilter;
-import com.iai.proteus.queryset.SosOfferingObject;
+import com.iai.proteus.queryset.SosSensorOffering;
 import com.iai.proteus.queryset.TimeFacet;
 import com.iai.proteus.queryset.model.v1.SosBoundingBox;
 import com.iai.proteus.ui.ContentProvider;
@@ -220,7 +220,7 @@ public class QuerySetPart implements MapIdentifier {
 	// private Set<String> selectedObservedProperties = new HashSet<>();
 
 	// Holds sensor offerings
-	private Collection<SosOfferingObject> sensorOfferings;
+	private Collection<SosSensorOffering> sensorOfferings;
 
 	// The basic sensor offering layer part of this context (query set)
 	private SensorOfferingLayer offeringLayer;
@@ -781,11 +781,11 @@ public class QuerySetPart implements MapIdentifier {
 				false, 1, 1));
 		tilePreview.setCursor(cursor);
 
-		createLiveTop(Tile.PREVIEW, tilePreview, "Preview");
+		createLiveTop(Tile.PREVIEW, tilePreview, "Sensor offerings");
 		livePreview = createLiveTile(tilePreview);
 		// set and update the live tile text
 		livePreview.setText("");
-		updateLiveTilePreview(0, 0);
+		updateLiveTilePreview(0L);
 
 		/*
 		 * EXPORT
@@ -1138,11 +1138,14 @@ public class QuerySetPart implements MapIdentifier {
 		itemClearProperties.setEnabled(false);
 		// listener
 		itemClearProperties.addSelectionListener(new SelectionAdapter() {
-			@SuppressWarnings("serial")
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				// clear selected observed properties
 				modelObservedProperties.deselectAll();
+				// update UI 
+				itemClearProperties.setEnabled(false);
+				// refresh viewer 
+				treeViewerObservedProperties.refresh();
 				// update items
 				updateOfferings();
 			}
@@ -1293,9 +1296,7 @@ public class QuerySetPart implements MapIdentifier {
 							category.deselect();
 						}
 					}
-					// update offerings
-					updateOfferings();
-
+					
 					// update the UI
 					if (modelObservedProperties.getSelectedObservedProperties()
 							.size() > 0) {
@@ -1305,6 +1306,10 @@ public class QuerySetPart implements MapIdentifier {
 					}
 
 					treeViewerObservedProperties.refresh();
+					
+					// update offerings
+					updateOfferings();
+
 					//
 					// // collect all the facet changes
 					// final Collection<FacetChangeToggle> changes =
@@ -3039,7 +3044,7 @@ public class QuerySetPart implements MapIdentifier {
 				updateSelectedServices();
 
 				// update offerings
-				updateOfferings();
+//				updateOfferings();
 
 				// mark as dirty
 				setDirty(true);
@@ -3140,9 +3145,6 @@ public class QuerySetPart implements MapIdentifier {
 					monitor.beginTask("Updating services", 
 							getServices().size());
 
-					// collection of sensor offerings to display
-					Collection<SosOfferingObject> items = new ArrayList<>();
-
 					// convert to sector if there is a bounding box 
 					Sector sector = null;
 					if (modelBoundingBox.hasBoundingBox()) {
@@ -3156,6 +3158,8 @@ public class QuerySetPart implements MapIdentifier {
 					final AtomicLong counterOfferingsByObservedProperties = 
 							new AtomicLong(0);
 
+					// clear sensor offerings 
+					modelSensorOfferings.clear();
 					
 					for (Service service : getServices()) {
 						if (service.isActive()) {
@@ -3213,7 +3217,9 @@ public class QuerySetPart implements MapIdentifier {
 								
 								// TODO: filter by result format 
 
-								items.add(new SosOfferingObject(service, offering));
+								// collect all matching sensor offerings 
+								modelSensorOfferings.addSosSensorOffering(service, 
+										offering);
 							}
 						}
 						
@@ -3224,10 +3230,14 @@ public class QuerySetPart implements MapIdentifier {
 					final int noSelectedProperties =
 							modelObservedProperties.getSelectedObservedProperties().size();
 
-					// update tiles 
+					// update tiles and viewers  
 					sync.asyncExec(new Runnable() {
 						@Override
 						public void run() {
+							
+							// UI viewers
+							tableViewerSensorOfferings.refresh();
+							
 							// services
 							updateLiveTileServices(countServices.get());
 							// region 
@@ -3235,10 +3245,14 @@ public class QuerySetPart implements MapIdentifier {
 							// observed properties
 							updateLiveTileObservedProperties(noSelectedProperties, 
 									counterOfferingsByObservedProperties.get());
+							// sensor offerings
+							updateLiveTilePreview(counterOfferingsByObservedProperties.get());
 						}
 					});					
 					
-					eventBroker.post(EventConstants.EVENT_GEO_OFFERINGS_UPDATE, items);
+					// send event to geo-browser  
+					eventBroker.post(EventConstants.EVENT_GEO_OFFERINGS_UPDATE, 
+							modelSensorOfferings.getSosSensorOfferings());
 					
 				} finally {
 					monitor.done();
@@ -3501,7 +3515,7 @@ public class QuerySetPart implements MapIdentifier {
 	 * @param rangeVariables
 	 */
 	@SuppressWarnings("serial")
-	private void previewData(SosOfferingObject offeringItem,
+	private void previewData(SosSensorOffering offeringItem,
 			String observedProperty, Field domainVariable,
 			Collection<Field> rangeVariables) {
 
@@ -3552,15 +3566,15 @@ public class QuerySetPart implements MapIdentifier {
 	 * 
 	 * @return
 	 */
-	private SosOfferingObject getSensorOfferingSelection() {
+	private SosSensorOffering getSensorOfferingSelection() {
 		ISelection selection = tableViewerSensorOfferings.getSelection();
 		if (selection instanceof StructuredSelection) {
 			StructuredSelection structured = (StructuredSelection) selection;
 
 			Object first = structured.getFirstElement();
 
-			if (first instanceof SosOfferingObject) {
-				return ((SosOfferingObject) first);
+			if (first instanceof SosSensorOffering) {
+				return ((SosSensorOffering) first);
 			}
 		}
 		// default
@@ -3672,7 +3686,7 @@ public class QuerySetPart implements MapIdentifier {
 	 * 
 	 * @param offeringItem
 	 */
-	private void updateAvailableVariables(SosOfferingObject offeringItem) {
+	private void updateAvailableVariables(SosSensorOffering offeringItem) {
 
 		SensorOffering sensorOffering = offeringItem.getSensorOffering();
 		String offeringId = sensorOffering.getGmlId();
@@ -3720,7 +3734,7 @@ public class QuerySetPart implements MapIdentifier {
 	 */
 	private void prepareForPreview() {
 
-		SosOfferingObject offeringItem = getSensorOfferingSelection();
+		SosSensorOffering offeringItem = getSensorOfferingSelection();
 		if (offeringItem != null) {
 
 			SensorOffering offering = offeringItem.getSensorOffering();
@@ -3935,7 +3949,7 @@ public class QuerySetPart implements MapIdentifier {
 		System.out.println("Selected: " + selected.size());
 
 		// collect the selected observed properties
-		final int checked = selected.size();
+//		final int checked = selected.size();
 
 		// retain model information (state: active/inactive)
 		// Collection<ObservedProperty> checkedOPs = new ArrayList<>();
@@ -3973,11 +3987,11 @@ public class QuerySetPart implements MapIdentifier {
 		sync.asyncExec(new Runnable() {
 			@Override
 			public void run() {
-				if (checked > 0) {
-					itemClearProperties.setEnabled(true);
-				} else {
-					itemClearProperties.setEnabled(false);
-				}
+//				if (checked > 0) {
+//					itemClearProperties.setEnabled(true);
+//				} else {
+//					itemClearProperties.setEnabled(false);
+//				}
 
 				treeViewerObservedProperties.refresh();
 				treeViewerObservedProperties.expandAll();
@@ -4060,27 +4074,27 @@ public class QuerySetPart implements MapIdentifier {
 	 * 
 	 * @param offerings
 	 */
-	public void updateSensorOfferings(
-			final Collection<SosOfferingObject> offerings) {
-
-		// update the viewer model
-		modelSensorOfferings.setSensorOfferings(offerings);
-
-		UIUtil.update(new Runnable() {
-			@Override
-			public void run() {
-				tableViewerSensorOfferings.refresh();
-
-				int selectedProperties = getSelectedObservedProperties().size();
-
-				// update live tile
-				updateLiveTilePreview(offerings.size(), selectedProperties);
-
-				// update live tile
-				updateLiveTileExport(offerings.size(), selectedProperties);
-			}
-		});
-	}
+//	public void updateSensorOfferings(
+//			final Collection<SosSensorOffering> offerings) {
+//
+//		// update the viewer model
+//		modelSensorOfferings.setSensorOfferings(offerings);
+//
+//		UIUtil.update(new Runnable() {
+//			@Override
+//			public void run() {
+//				tableViewerSensorOfferings.refresh();
+//
+//				int selectedProperties = getSelectedObservedProperties().size();
+//
+//				// update live tile
+//				updateLiveTilePreview(offerings.size(), selectedProperties);
+//
+//				// update live tile
+//				updateLiveTileExport(offerings.size(), selectedProperties);
+//			}
+//		});
+//	}
 
 	/**
 	 * Updates the possibilities for selecting an observed property
@@ -4518,22 +4532,42 @@ public class QuerySetPart implements MapIdentifier {
 	 * Update live tile
 	 * 
 	 * @param timeFacet
-	 * @param selectedProperties
 	 */
-	private void updateLiveTilePreview(int count, int selectedProperties) {
+	private void updateLiveTilePreview(long count) {
 		String text = "";
 		boolean warning = false;
+		
+		String strPreviewData = "Let's look at some data!";
 
 		if (count > 0) {
-			text += "Let's look at some data!";
+			text += strPreviewData;
 		} else {
 			text += "No data to preview";
 			warning = true;
 		}
+		
+		text += "\n\n";
+
+		if (count == 0) {
+			text += "No matched sensor offerings";
+			warning = true;
+		} else if (count == 1)
+			text += "One matching sensor offering";
+		else
+			text += count + " matching sensor offerings";
 
 		// set text
 		livePreview.setText(text);
-
+		
+		// extra styling 
+		if (count > 0) {
+			StyleRange styleRange = new StyleRange();
+			styleRange.start = 0;
+			styleRange.length = strPreviewData.length();
+			styleRange.fontStyle = SWT.BOLD;
+			livePreview.setStyleRange(styleRange);
+		}
+		
 		updateTile(Tile.PREVIEW, warning);
 	}
 

@@ -34,7 +34,7 @@ public class ContentProvider implements ITreeContentProvider {
 		} 
 		// sensor offerings
 		else if (parent instanceof SensorOfferingModel) {
-			return ((SensorOfferingModel) parent).getSensorOfferings().toArray();
+			return ((SensorOfferingModel) parent).getSosSensorOfferings().toArray();
 		}
 		// observed properties
 		else if (parent instanceof ObservedPropertyModel) {
