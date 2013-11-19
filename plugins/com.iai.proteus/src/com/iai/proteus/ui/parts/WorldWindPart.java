@@ -11,14 +11,15 @@ import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.awt.WorldWindowGLCanvas;
 import gov.nasa.worldwind.event.SelectEvent;
 import gov.nasa.worldwind.event.SelectListener;
+import gov.nasa.worldwind.geom.LatLon;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.geom.Sector;
-import gov.nasa.worldwind.globes.FlatGlobe;
-import gov.nasa.worldwind.globes.Globe;
 import gov.nasa.worldwind.layers.Layer;
 import gov.nasa.worldwind.layers.LayerList;
 import gov.nasa.worldwind.layers.RenderableLayer;
 import gov.nasa.worldwind.pick.PickedObject;
+import gov.nasa.worldwind.poi.BasicPointOfInterest;
+import gov.nasa.worldwind.poi.PointOfInterest;
 import gov.nasa.worldwind.render.GlobeAnnotation;
 import gov.nasa.worldwind.render.Renderable;
 import gov.nasa.worldwindx.examples.util.ToolTipController;
@@ -33,6 +34,7 @@ import java.util.Collection;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
 import org.apache.log4j.Logger;
@@ -46,8 +48,6 @@ import org.eclipse.e4.ui.di.Focus;
 import org.eclipse.e4.ui.di.UIEventTopic;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.awt.SWT_AWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
@@ -58,13 +58,9 @@ import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 
 import com.iai.proteus.common.sos.model.SensorOffering;
-import com.iai.proteus.common.sos.model.SosCapabilities;
-import com.iai.proteus.common.sos.util.SosUtil;
 import com.iai.proteus.events.EventConstants;
 import com.iai.proteus.map.AlertLayer;
-import com.iai.proteus.map.MarkerSelection;
 import com.iai.proteus.map.SectorSelector;
-import com.iai.proteus.map.SelectionNotifier;
 import com.iai.proteus.map.SensorOfferingMarker;
 import com.iai.proteus.map.WorldWindUtils;
 import com.iai.proteus.map.wms.MapAVKey;
@@ -75,26 +71,23 @@ import com.iai.proteus.model.MapId;
 import com.iai.proteus.model.map.IMapLayer;
 import com.iai.proteus.model.map.WmsMapLayer;
 import com.iai.proteus.model.map.WmsSavedMap;
-import com.iai.proteus.model.services.Service;
-import com.iai.proteus.queryset.Facet;
-import com.iai.proteus.queryset.FacetChangeToggle;
 import com.iai.proteus.queryset.RearrangeMapsEventValue;
-import com.iai.proteus.queryset.SosSensorOffering;
 import com.iai.proteus.queryset.SosOfferingLayer;
+import com.iai.proteus.queryset.SosSensorOffering;
 import com.iai.proteus.ui.UIUtil;
 
 /**
- * A World Wind View making use of the "Albireo" plug-in to embed World Wind
+ * NASA World Wind view 
  *
  * @author Jakob Henriksson
  *
  */
-public class WorldWindView implements SelectListener, PropertyChangeListener {
+public class WorldWindPart implements SelectListener, PropertyChangeListener {
 
 	@Inject
 	private IEventBroker eventBroker;
 	
-	private static final Logger log = Logger.getLogger(WorldWindView.class);
+	private static final Logger log = Logger.getLogger(WorldWindPart.class);
 
 	public static final String ID = "com.iai.proteus.view.WorldWindView";
 
@@ -102,8 +95,6 @@ public class WorldWindView implements SelectListener, PropertyChangeListener {
 	private Image imgSectorClear;
 	
 	private static WorldWindowGLCanvas world;
-    private Globe roundGlobe;
-    private FlatGlobe flatGlobe;
 
 	/*
 	 * Fixed Layers
@@ -126,10 +117,7 @@ public class WorldWindView implements SelectListener, PropertyChangeListener {
 	 * Constructor
 	 *
 	 */
-	public WorldWindView() {
-
-//		Configuration.setValue(AVKey.GLOBE_CLASS_NAME, EarthFlat.class.getName());
-//		Configuration.setValue(AVKey.VIEW_CLASS_NAME, FlatOrbitView.class.getName());
+	public WorldWindPart() {
 
 		// resources 
 		imgSectorSelect = UIUtil.getImage("resources/icons/fugue/zone--plus.png");
@@ -141,9 +129,6 @@ public class WorldWindView implements SelectListener, PropertyChangeListener {
 				AVKey.MODEL_CLASS_NAME);
 		getWwd().setModel(model);
 		
-//		this.flatGlobe = new EarthFlat();
-//        this.roundGlobe = getWwd().getModel().getGlobe();
-
 		// initialize sector selector 
 		initializeSectorSelection();
 		
@@ -174,19 +159,7 @@ public class WorldWindView implements SelectListener, PropertyChangeListener {
 	 * 
 	 */
 	@PostConstruct
-	public void createPartControl(final Composite parent) {
-
-		parent.addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e) {
-				if (imgSectorSelect != null) {
-					imgSectorSelect.dispose();
-				}
-				if (imgSectorClear != null) {
-					imgSectorClear.dispose();
-				}
-			}
-		});
+	public void postConstruct(Composite parent) {
 		
 		parent.setLayout(new GridLayout(1, true));
 		
@@ -239,14 +212,38 @@ public class WorldWindView implements SelectListener, PropertyChangeListener {
 		getWwd().getInputHandler().addSelectListener(this);
 	}
 	
-	/**
-	 * Initialize the menu.
-	 */
-	private void initializeMenu() {
-//		IMenuManager menuManager = getViewSite().getActionBars()
-//				.getMenuManager();
+	@PreDestroy
+	private void preDestroy() {
+		if (imgSectorSelect != null) {
+			imgSectorSelect.dispose();
+		}
+		if (imgSectorClear != null) {
+			imgSectorClear.dispose();
+		}
 	}
+	
+	/**
+	 * Handle updated sensor offering selection 
+	 * 
+	 * @param offering
+	 */
+	@Inject
+	@Optional
+	private void receiveEvent(
+			@UIEventTopic(EventConstants.EVENT_GEO_SELECTION_UPDATED) SosSensorOffering offering) {
 
+		if (offering != null) {
+			Position pos =
+					WorldWindUtils.getCentralPosition(offering.getSensorOffering());
+			
+			PointOfInterest point = new BasicPointOfInterest(
+					new LatLon(pos.getLatitude(), pos.getLongitude()));
+			
+			WorldWindUtils.moveToLocation(getWwd().getView(), point);
+		}
+	}
+	
+	
 	/**
 	 * Passing the focus request to the viewer's control.
 	 */
@@ -292,13 +289,17 @@ public class WorldWindView implements SelectListener, PropertyChangeListener {
 				SensorOfferingMarker marker = 
 						(SensorOfferingMarker) picked.getObject();
 
-				// populate selection object
-				final MarkerSelection selection = new MarkerSelection();
-				selection.add(marker);
+				SosSensorOffering sensorOffering = 
+						new SosSensorOffering(marker.getService(), 
+								marker.getSensorOffering());
+				
+				Collection<SosSensorOffering> offerings = 
+						new ArrayList<>();
+				offerings.add(sensorOffering);
 
-				// notify listeners of selection
-				// TODO: implement 
-//				SelectionNotifier.getInstance().selectionChanged(selection);
+				// send event 
+				eventBroker.post(EventConstants.EVENT_GEO_SELECTION_NEW, 
+						offerings);
 			}
 		}
 	}
@@ -390,158 +391,6 @@ public class WorldWindView implements SelectListener, PropertyChangeListener {
 		}
 	}
 
-	
-	/**
-	 * Initialize a #{link SosOfferingLayer}
-	 *
-	 * @param mapId
-	 */
-	private SosOfferingLayer initializeOfferingsLayer(MapId mapId) {
-		// create layer 
-//		SosOfferingLayer layer =
-//				new SosOfferingLayer(getWwd(),
-//						createSectorSelector(), mapId);
-//		// associate ID with layer 
-//		layer.setValue(MapAVKey.MAP_ID, mapId.toString());
-//		// add marker layer to World Wind
-//		getWwd().getModel().getLayers().add(layer);
-//		log.info("Initialized sensor offerings layer: " + mapId);
-//		return layer;
-		return null;
-	}
-	
-
-	/**
-	 * Create or update the given map layer with sensor offerings from 
-	 * the given services  
-	 * 
-	 * @param mapId
-	 * @param services
-	 */
-	private void createOrUpdateOfferingsLayer(final MapId mapId, 
-			final List<Service> services) 
-	{
-		// create job for updating offerings layer
-		Job job = new Job("Downloading Capabilities documents...") {
-			@Override
-			protected IStatus run(IProgressMonitor monitor) {
-				try {
-
-					monitor.beginTask("Downloading Capabilities documents...",
-							services.size());
-					
-					System.out.println("Services: " + services.size());
-
-					// collect markers from all given services 
-					List<Renderable> allMarkers = new ArrayList<Renderable>();
-					for (Service service : services) {
-
-						SosCapabilities capabilities =
-								SosUtil.getCapabilities(service.getEndpoint());
-						List<Renderable> markers =
-								WorldWindUtils.getCapabilitiesMarkers(capabilities,
-										service.getColor());
-						allMarkers.addAll(markers);
-
-						monitor.worked(1);
-
-						// TODO: properly handle cancel operation
-						if (monitor.isCanceled())
-							break;
-					}
-
-					// create layer with markers using the default map ID
-					createOrUpdateOfferingsLayerWithMarkers(mapId, allMarkers);
-
-				} finally {
-					monitor.done();
-				}
-
-				return Status.OK_STATUS;
-			}
-		};
-		job.setUser(true);
-		job.schedule();
-	}
-
-	/**
-	 * Creates a layer with the given markers
-	 *
-	 * @param mapId
-	 * @param markers
-	 */
-	private void createOrUpdateOfferingsLayerWithMarkers(final MapId mapId, 
-			final List<Renderable> markers)
-	{
-		// run in a separate thread 
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-
-				// find and use the sensor offering layer, if it exists 
-				Layer layer = getLayer(mapId);
-				if (layer != null && layer instanceof SosOfferingLayer) {
-
-					// update existing layer
-					SosOfferingLayer offeringLayer =
-							(SosOfferingLayer) layer;
-					// reset markers 
-					offeringLayer.resetRenderables(markers);
-					offeringLayer.setEnabled(true);
-
-				} else {
-
-					if (markers.size() <= 0)
-						log.warn("Creating a sensor offering layer with no markers");
-					
-					// create new sensor offering layer
-					// the name of the layer is set automatically
-					SosOfferingLayer offeringLayer = 
-							initializeOfferingsLayer(mapId);
-					
-					offeringLayer.setRenderables(markers);
-					offeringLayer.setEnabled(true);
-				}
-			}
-		}).start();
-	}
-
-	/**
-	 * Creates a layer with the given markers
-	 *
-	 * @param mapId
-	 * @param markers
-	 */
-//	private void createSosLayerWithMarkers(final MapId mapId, final List<Renderable> markers)
-//	{
-//		/*
-//		 * Create the layer if there are markers to add to it
-//		 */
-//		if (markers.size() > 0) {
-//
-//			new Thread(new Runnable() {
-//				@Override
-//				public void run() {
-//
-//					LayerList layers = getWwd().getModel().getLayers();
-//
-//					// the name of the layer is set automatically
-//					SosOfferingLayer offeringLayer =
-//							new SosOfferingLayer(getWwd(), selector, mapId);
-//					// associate ID with layer 
-//					offeringLayer.setValue(MapAVKey.MAP_ID, mapId.toString());
-//					offeringLayer.setRenderables(markers);
-//					offeringLayer.setEnabled(true);
-//
-//					/* add marker layer to World Wind */
-//					layers.add(offeringLayer);
-//				}
-//			}).start();
-//
-//		} else {
-//			log.warn("Tried to create a layer, but there were no markers.");
-//		}
-//	}
 
 	/**
 	 * Initializes the selection of a sector
@@ -553,19 +402,6 @@ public class WorldWindView implements SelectListener, PropertyChangeListener {
 		this.selector.setInteriorColor(new Color(1f, 1f, 1f, 0.1f));
 		this.selector.setBorderColor(new Color(1f, 0f, 0f, 0.5f));
 		this.selector.setBorderWidth(3);
-	}
-
-	/**
-	 * Creates and returns a SectorSelector object for constraining areas
-	 *
-	 * @return
-	 */
-	private SectorSelector createSectorSelector() {
-		SectorSelector selector = new SectorSelector(getWwd());
-		selector.setInteriorColor(new Color(1f, 1f, 1f, 0.1f));
-		selector.setBorderColor(new Color(1f, 0f, 0f, 0.5f));
-		selector.setBorderWidth(3);
-		return selector;
 	}
 
 	/**
@@ -586,27 +422,7 @@ public class WorldWindView implements SelectListener, PropertyChangeListener {
 		}
 	}
 	
-	/**
-	 * Toggles the services on or off for the given map (query set)
-	 *
-	 * @param mapId
-	 * @param serviceObjects
-	 */
-	private void setServices(MapId mapId, Collection<?> serviceObjects) {
-		// check and convert object types 
-		List<Service> services = new ArrayList<Service>();
-		for (Object obj : serviceObjects) {
-			if (obj instanceof Service) {
-				Service service = (Service) obj;
-				// only include active services 
-				if (service.isActive())
-					services.add(service);
-			}
-		}
-		// create or update the sensor offering layer 
-		createOrUpdateOfferingsLayer(mapId, services);
-	}
-	
+
 	/**
 	 * Activate the layers with the matching IDs, hide other layers
 	 *
@@ -1064,100 +880,6 @@ public class WorldWindView implements SelectListener, PropertyChangeListener {
 	}
 
     /**
-     * Notifies layers that the sector has been cleared
-     *
-     */
-    private void notifyLayersOfClearedRestrictions() {
-    	/*
-    	 * Notify layers of the change so they can update themselves
-    	 */
-    	for (Layer layer : getWwd().getModel().getLayers()) {
-    		if (layer instanceof SosOfferingLayer) {
-    			SosOfferingLayer offeringLayer =
-    					(SosOfferingLayer) layer;
-    			if (offeringLayer.isEnabled()) {
-    				offeringLayer.clearSector();
-    				offeringLayer.clearFacets();
-    			}
-    		}
-    	}
-    }
-
-    /**
-     * Notify layer to clear the facet type
-     *
-     * @param mapId
-     * @param facetType
-     */
-    private void notifyLayerOfFacetClearing(MapId mapId, Facet facetType) {
-
-    	/*
-    	 * Notify layer of the change so it can update
-    	 */
-    	Layer layer = getLayer(mapId);
-    	if (layer != null && layer instanceof SosOfferingLayer) {
-    		SosOfferingLayer offeringLayer = (SosOfferingLayer) layer;
-    		offeringLayer.clearFacetConstraints(facetType);
-    	}
-    }
-
-    /**
-     * Notifies the appropriate layers of the change in facet selection
-     *
-     * @param mapId
-     * @param facet
-     */
-    private void notifyLayerOfFacetSelection(MapId mapId,
-    		FacetChangeToggle facet)
-    {
-    	List<FacetChangeToggle> changes = new ArrayList<FacetChangeToggle>();
-    	changes.add(facet);
-
-    	notifyLayerOfFacetChanges(mapId, changes);
-    }
-
-
-    /**
-     * Notifies the appropriate layers of the change in facet selection
-     *
-     * @param mapId
-     * @param facets
-     */
-    private void notifyLayerOfFacetSelection(MapId mapId, Collection<?> facets) {
-
-    	/*
-    	 * Make sure we are dealing with objects of the right type
-    	 */
-    	List<FacetChangeToggle> changes = new ArrayList<FacetChangeToggle>();
-    	for (Object obj : facets) {
-    		if (obj instanceof FacetChangeToggle) {
-    			changes.add((FacetChangeToggle) obj);
-    		}
-    	}
-
-    	notifyLayerOfFacetChanges(mapId, changes);
-    }
-
-    /**
-     * Notifies the appropriate layers of the change in facet selection
-     *
-     * @param mapId
-     * @param facets
-     */
-    private void notifyLayerOfFacetChanges(MapId mapId,
-    		Collection<FacetChangeToggle> facets)
-    {
-    	/*
-    	 * Notify layer of the change so it can update
-    	 */
-    	Layer layer = getLayer(mapId);
-    	if (layer != null && layer instanceof SosOfferingLayer) {
-    		SosOfferingLayer offeringLayer = (SosOfferingLayer) layer;
-    		offeringLayer.addOrRemoveFacetConstraints(facets);
-    	}
-    }
-
-    /**
      * Returns a collection of renderables from SosOfferingLayers that
      * are enabled
      *
@@ -1206,68 +928,4 @@ public class WorldWindView implements SelectListener, PropertyChangeListener {
     			layer.setEnabled(!layer.isEnabled());
     	}
     }
-    
-    /**
-     * Returns true if the globe is flat
-     * 
-     * @return
-     */
-    public boolean isFlatGlobe() {
-        return getWwd().getModel().getGlobe() instanceof FlatGlobe;
-    }
-    
-    /**
-     * Enables or disables a flat globe
-     * 
-     * (from NASA's @{link FlatWorldPanel})
-     * 
-     * @param flat
-     */
-//    private void enableFlatGlobe(boolean flat) {
-//
-//        if (isFlatGlobe() == flat)
-//            return;
-//
-//        if (!flat) {
-//            // Switch to round globe
-//            getWwd().getModel().setGlobe(roundGlobe);
-//            // Switch to orbit view and update with current position
-//            FlatOrbitView flatOrbitView = (FlatOrbitView)getWwd().getView();
-//            BasicOrbitView orbitView = new BasicOrbitView();
-//            orbitView.setCenterPosition(flatOrbitView.getCenterPosition());
-//            orbitView.setZoom(flatOrbitView.getZoom( ));
-//            orbitView.setHeading(flatOrbitView.getHeading());
-//            orbitView.setPitch(flatOrbitView.getPitch());
-//            getWwd().setView(orbitView);
-//            // Change sky layer
-//            LayerList layers = getWwd().getModel().getLayers();
-//            for (int i = 0; i < layers.size(); i++) {
-//                if (layers.get(i) instanceof SkyColorLayer)
-//                    layers.set(i, new SkyGradientLayer());
-//            }
-//        }
-//        else
-//        {
-//            // Switch to flat globe
-//            getWwd().getModel().setGlobe(flatGlobe);
-//            flatGlobe.setProjection(FlatGlobe.PROJECTION_MERCATOR);
-//            // Switch to flat view and update with current position
-//            BasicOrbitView orbitView = (BasicOrbitView)getWwd().getView();
-//            FlatOrbitView flatOrbitView = new FlatOrbitView();
-//            flatOrbitView.setCenterPosition(orbitView.getCenterPosition());
-//            flatOrbitView.setZoom(orbitView.getZoom( ));
-//            flatOrbitView.setHeading(orbitView.getHeading());
-//            flatOrbitView.setPitch(orbitView.getPitch());
-//            getWwd().setView(flatOrbitView);
-//            // Change sky layer
-//            LayerList layers = getWwd().getModel().getLayers();
-//            for (int i = 0; i < layers.size(); i++) {
-//                if (layers.get(i) instanceof SkyGradientLayer)
-//                    layers.set(i, new SkyColorLayer());
-//            }
-//        }
-//        
-//        getWwd().redraw();
-//    }    
-
 }

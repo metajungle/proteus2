@@ -9,6 +9,13 @@ package com.iai.proteus.queryset;
 import com.iai.proteus.common.sos.model.SensorOffering;
 import com.iai.proteus.model.services.Service;
 
+/**
+ * An SOS sensor offering referring both to the {@link Service} and the 
+ * {@link SensorOffering} model objects of the sensor offering. 
+ * 
+ * @author b0kaj
+ *
+ */
 public class SosSensorOffering {
 
 	private Service service;

@@ -8,8 +8,8 @@
             <toolbar xmi:id="_3NP0MEfzEeOPvrQ5NgCGlg" elementId="com.iai.proteus.toolbar.0"/>
           </children>
           <children xsi:type="basic:PartSashContainer" xmi:id="_AGk9gEcREeOYwZVeSI5MZQ" elementId="com.iai.proteus2.partsashcontainer.0" containerData="12000">
-            <children xsi:type="basic:Part" xmi:id="_YQwpkEcREeOYwZVeSI5MZQ" elementId="com.iai.proteus2.part.1" containerData="14000" contributionURI="bundleclass://com.iai.proteus/com.iai.proteus.ui.parts.WorldWindView" label="GeoBrowser"/>
-            <children xsi:type="basic:Part" xmi:id="_WQO8QEcREeOYwZVeSI5MZQ" elementId="com.iai.proteus2.part.0" containerData="6000" contributionURI="bundleclass://com.iai.proteus/com.iai.proteus.ui.parts.TimeSeriesPart" label="Time Series"/>
+            <children xsi:type="basic:Part" xmi:id="_YQwpkEcREeOYwZVeSI5MZQ" elementId="com.iai.proteus2.part.1" containerData="14000" contributionURI="bundleclass://com.iai.proteus/com.iai.proteus.ui.parts.WorldWindPart" label="GeoBrowser"/>
+            <children xsi:type="basic:Part" xmi:id="_WQO8QEcREeOYwZVeSI5MZQ" elementId="com.iai.proteus2.part.0" containerData="6000" contributionURI="bundleclass://com.iai.proteus/com.iai.proteus.ui.parts.DataPlotPart" label="Time Series"/>
           </children>
         </children>
       </children>

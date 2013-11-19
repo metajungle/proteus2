@@ -8,6 +8,8 @@ package com.iai.proteus.map;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.iai.proteus.queryset.SosSensorOffering;
+
 /**
  * Represents a World Wind marker selection 
  * 
@@ -16,17 +18,31 @@ import java.util.List;
  */
 public class MarkerSelection {
 
-	List<SensorOfferingMarker> markers;
+	private List<SosSensorOffering> markers;
 	
+	/**
+	 * Constructor 
+	 * 
+	 */
 	public MarkerSelection() {
-		markers = new ArrayList<SensorOfferingMarker>(); 
+		markers = new ArrayList<>(); 
 	}
 	
-	public void add(SensorOfferingMarker marker) {
+	/**
+	 * Add a selection
+	 * 
+	 * @param marker
+	 */
+	public void add(SosSensorOffering marker) {
 		markers.add(marker);
 	}
 	
-	public List<SensorOfferingMarker> getSelection() {
+	/**
+	 * Returns the selection 
+	 * 
+	 * @return
+	 */
+	public List<SosSensorOffering> getSelection() {
 		return markers; 
 	}
 }

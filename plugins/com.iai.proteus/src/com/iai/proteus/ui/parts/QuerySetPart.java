@@ -445,7 +445,7 @@ public class QuerySetPart implements MapIdentifier {
 		tileStatus.put(Tile.PROPERTIES, TileStatus.INACTIVE_OK);
 		tileStatus.put(Tile.TIME, TileStatus.INACTIVE_WARNING);
 		tileStatus.put(Tile.FORMATS, TileStatus.INACTIVE_WARNING);
-		tileStatus.put(Tile.PREVIEW, TileStatus.INACTIVE_WARNING);
+		tileStatus.put(Tile.SENSOR_OFFERINGS, TileStatus.INACTIVE_WARNING);
 		tileStatus.put(Tile.EXPORT, TileStatus.INACTIVE_WARNING);
 
 		/*
@@ -616,7 +616,7 @@ public class QuerySetPart implements MapIdentifier {
 	 * @param parent
 	 */
 	@PostConstruct
-	private void createComposite(final Composite parent) {
+	private void postConstruct(Composite parent) {
 
 		// setting the progress monitor
 		IJobManager manager = Job.getJobManager();
@@ -636,8 +636,6 @@ public class QuerySetPart implements MapIdentifier {
 			System.err.println("Could not find model element...");
 		}
 
-		// setShowClose(true);
-
 		parent.setLayout(new GridLayout(1, false));
 
 		/*
@@ -645,11 +643,9 @@ public class QuerySetPart implements MapIdentifier {
 		 */
 
 		compositeOuterStack = new Composite(parent, SWT.NONE);
-		compositeOuterStack.setLayoutData(new GridData(GridData.FILL_BOTH));
+		compositeOuterStack.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		compositeOuterLayout = new StackLayout();
 		compositeOuterStack.setLayout(compositeOuterLayout);
-
-		// this.setControl(compositeOuterStack);
 
 		/*
 		 * Sensors
@@ -657,17 +653,20 @@ public class QuerySetPart implements MapIdentifier {
 
 		sashSensors = new SashForm(compositeOuterStack, SWT.SMOOTH);
 		sashSensors.setSashWidth(10);
-		GridData gd_sash = new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1);
+		GridData gd_sash = new GridData(SWT.FILL, SWT.FILL, true, true);
 		// gd_sash.widthHint = 338;
 		sashSensors.setLayoutData(gd_sash);
 
-		final ScrolledComposite scrolledTiles = new ScrolledComposite(
-				sashSensors, SWT.V_SCROLL);
+		final ScrolledComposite scrolledTiles = 
+				new ScrolledComposite(sashSensors, SWT.V_SCROLL);
+		scrolledTiles.setLayout(new GridLayout(1, false));
+		scrolledTiles.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		scrolledTiles.setExpandVertical(true);
 		scrolledTiles.setExpandHorizontal(true);
-
+		
 		final Composite tiles = new Composite(scrolledTiles, SWT.NONE);
 		tiles.setLayout(new GridLayout(1, false));
+		tiles.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
 		/*
 		 * SERVICES
@@ -781,11 +780,11 @@ public class QuerySetPart implements MapIdentifier {
 				false, 1, 1));
 		tilePreview.setCursor(cursor);
 
-		createLiveTop(Tile.PREVIEW, tilePreview, "Sensor offerings");
+		createLiveTop(Tile.SENSOR_OFFERINGS, tilePreview, "Sensor offerings");
 		livePreview = createLiveTile(tilePreview);
 		// set and update the live tile text
 		livePreview.setText("");
-		updateLiveTilePreview(0L);
+		updateLiveTileSensorOfferings(0L);
 
 		/*
 		 * EXPORT
@@ -958,7 +957,6 @@ public class QuerySetPart implements MapIdentifier {
 		itemServiceColor.setEnabled(false);
 		// manage services listener
 		itemServiceColor.addSelectionListener(new SelectionAdapter() {
-			@SuppressWarnings("serial")
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				ISelection selection = tableViewerSosServices.getSelection();
@@ -976,20 +974,8 @@ public class QuerySetPart implements MapIdentifier {
 						service.setColor(color);
 						// update viewer
 						tableViewerSosServices.refresh();
-
 						// update offerings
 						updateOfferings();
-
-						// send event to layer to update the color
-						// eventAdminService.sendEvent(new
-						// Event(EventTopic.QS_LAYER_SET_COLOR.toString(),
-						// new HashMap<String, Object>() {
-						// {
-						// put("object", getMapId());
-						// put("value", color);
-						// put("service", service.getEndpoint());
-						// }
-						// }));
 					}
 				}
 			}
@@ -1022,7 +1008,7 @@ public class QuerySetPart implements MapIdentifier {
 		tableViewerSosServices = createServiceTableViewer(stackServices);
 
 		tableServices = tableViewerSosServices.getTable();
-		tableServices.setLayoutData(new GridData(GridData.FILL_BOTH));
+		tableServices.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		tableServices.setHeaderVisible(true);
 		tableServices.setLinesVisible(false);
 
@@ -1107,7 +1093,7 @@ public class QuerySetPart implements MapIdentifier {
 		lblBoundingBoxRestriction = new Label(stackGeographicArea, SWT.WRAP);
 		lblBoundingBoxRestriction.setText("No region currently active.");
 		lblBoundingBoxRestriction
-				.setLayoutData(new GridData(GridData.FILL_BOTH));
+				.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
 		/*
 		 * STACK: properties
@@ -1603,66 +1589,57 @@ public class QuerySetPart implements MapIdentifier {
 				.addSelectionChangedListener(new ISelectionChangedListener() {
 					@Override
 					public void selectionChanged(SelectionChangedEvent event) {
-						// if (event.getSelection() instanceof
-						// StructuredSelection) {
-						// StructuredSelection selection =
-						// (StructuredSelection) event.getSelection();
-						//
-						// if (selection.size() == 1) {
-						// Object first = selection.getFirstElement();
-						// if (first instanceof SensorOfferingItem) {
-						// SensorOfferingItem item = (SensorOfferingItem) first;
-						//
-						// /*
-						// * Update the options for selecting observed
-						// properties
-						// */
-						// updateObservedPropertiesSelection(item.getSensorOffering());
-						//
-						// }
-						// } else {
-						//
-						// /*
-						// * Clear observed properties
-						// */
-						// updateObservedPropertiesSelection(null);
-						//
-						// // TODO: send event to map to clear highlighting
-						// }
-						// }
+						if (event.getSelection() instanceof StructuredSelection) {
+							StructuredSelection selection = 
+									(StructuredSelection) event.getSelection();
+
+							if (selection.size() == 1) {
+								Object first = selection.getFirstElement();
+								if (first instanceof SosSensorOffering) {
+									SosSensorOffering item = 
+											(SosSensorOffering) first;
+
+									/*
+									 * Update the options for selecting observed
+									 * properties
+									 */
+									// TODO: implement 
+//									updateObservedPropertiesSelection(item
+//											.getSensorOffering());
+
+								}
+							} else {
+
+								/*
+								 * Clear observed properties
+								 */
+								// TODO: implement 
+//								updateObservedPropertiesSelection(null);
+
+								// TODO: implement: send event to map to clear highlighting
+							}
+						}
 					}
 				});
 
 		// listening to double clicks on sensor offering list
 		tableViewerSensorOfferings
 				.addDoubleClickListener(new IDoubleClickListener() {
-					@SuppressWarnings("serial")
 					@Override
 					public void doubleClick(DoubleClickEvent event) {
-						// ISelection selection = event.getSelection();
-						// if (selection instanceof StructuredSelection) {
-						// Object elmt =
-						// ((StructuredSelection) selection).getFirstElement();
-						// if (elmt instanceof SensorOfferingItem) {
-						// SensorOffering offering =
-						// ((SensorOfferingItem) elmt).getSensorOffering();
-						//
-						// final Position pos =
-						// WorldWindUtils.getCentralPosition(offering);
-						//
-						// // fire event to fly to location
-						// eventAdminService.sendEvent(new
-						// Event(EventTopic.QS_FLY_TO_LATLON.toString(),
-						// new HashMap<String, Object>() {
-						// {
-						// put("object", this);
-						// put("value", new LatLon(pos.getLatitude().degrees,
-						// pos.getLongitude().degrees));
-						// }
-						// }));
-						//
-						// }
-						// }
+						ISelection selection = event.getSelection();
+						if (selection instanceof StructuredSelection) {
+							Object elmt = ((StructuredSelection) selection)
+									.getFirstElement();
+							if (elmt instanceof SosSensorOffering) {
+								SosSensorOffering offering = 
+										(SosSensorOffering) elmt;
+								
+								// send event to map that selection was updated
+								eventBroker.post(EventConstants.EVENT_GEO_SELECTION_UPDATED, 
+										offering);
+							}
+						}
 					}
 				});
 
@@ -1679,15 +1656,15 @@ public class QuerySetPart implements MapIdentifier {
 		 * Preview stack - Preview Button
 		 */
 		compositePlotPreviewRequest = new Composite(compositePreview, SWT.NONE);
-		compositePlotPreviewRequest.setLayout(new GridLayout(1, true));
+		compositePlotPreviewRequest.setLayout(new GridLayout(1, false));
 		compositePlotPreviewRequest.setLayoutData(new GridData(SWT.FILL,
 				SWT.FILL, true, true));
 
 		btnFetchPreview = new Button(compositePlotPreviewRequest, SWT.PUSH);
-		btnFetchPreview.setText("Preview sensor data");
 		btnFetchPreview.setImage(imgChart);
-		btnFetchPreview.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true,
-				false));
+		btnFetchPreview.setText("Preview sensor data");
+		btnFetchPreview.setLayoutData(
+				new GridData(SWT.FILL, SWT.CENTER, true, false));
 
 		btnFetchPreview.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -2827,11 +2804,20 @@ public class QuerySetPart implements MapIdentifier {
 		treeViewerWmsLayers.setInput(new Object[0]);
 	}
 
+	/**
+	 * Before part is destroyed  
+	 * 
+	 */
 	@PreDestroy
 	private void preDestroy() {
 		disposeResources();
 	}
 
+	/**
+	 * Handle setting of the bounding box selection 
+	 * 
+	 * @param sector
+	 */
 	@Inject
 	@Optional
 	private void receiveEvent(
@@ -2847,6 +2833,11 @@ public class QuerySetPart implements MapIdentifier {
 		lblBoundingBoxRestriction.update();
 	}
 
+	/**
+	 * Handle clearing of the bounding box selection 
+	 * 
+	 * @param sector
+	 */
 	@Inject
 	@Optional
 	private void receiveEvent(
@@ -2862,6 +2853,27 @@ public class QuerySetPart implements MapIdentifier {
 		}
 		lblBoundingBoxRestriction.update();
 	}
+	
+	/**
+	 * Handle selection of a sensor offering in the map view   
+	 * 
+	 * @param offerings
+	 */
+	@Inject
+	@Optional
+	private void receiveEvent(
+			@UIEventTopic(EventConstants.EVENT_GEO_SELECTION_NEW) 
+				Collection<SosSensorOffering> offerings) 
+	{
+		// activate tile
+		activateTile(Tile.SENSOR_OFFERINGS);
+		// set selection 
+		StructuredSelection selection = 
+				new StructuredSelection(offerings.toArray());
+		tableViewerSensorOfferings.setSelection(selection, true);
+		tableViewerSensorOfferings.reveal(selection);
+		tableSensorOfferings.setFocus();
+	}	
 
 	@Focus
 	public void setFocus() {
@@ -3155,7 +3167,7 @@ public class QuerySetPart implements MapIdentifier {
 					final AtomicLong countServices = new AtomicLong(0);
 					final AtomicLong countOfferingsByBoundingBox = 
 							new AtomicLong(0);
-					final AtomicLong counterOfferingsByObservedProperties = 
+					final AtomicLong countOfferingsByObservedProperties = 
 							new AtomicLong(0);
 
 					// clear sensor offerings 
@@ -3211,7 +3223,7 @@ public class QuerySetPart implements MapIdentifier {
 									continue;
 								}
 								
-								counterOfferingsByObservedProperties.addAndGet(1L);
+								countOfferingsByObservedProperties.addAndGet(1L);
 								
 								// TODO: filter by time
 								
@@ -3242,15 +3254,20 @@ public class QuerySetPart implements MapIdentifier {
 							updateLiveTileServices(countServices.get());
 							// region 
 							updateLiveTileRegion(countOfferingsByBoundingBox.get());
+							long countByProperties = 
+									countOfferingsByObservedProperties.get();
 							// observed properties
 							updateLiveTileObservedProperties(noSelectedProperties, 
-									counterOfferingsByObservedProperties.get());
+									countByProperties);
 							// sensor offerings
-							updateLiveTilePreview(counterOfferingsByObservedProperties.get());
+							updateLiveTileSensorOfferings(countByProperties);
+							// export 
+							updateLiveTileExport(countByProperties, 
+									noSelectedProperties);
 						}
 					});					
 					
-					// send event to geo-browser  
+					// send event to map  
 					eventBroker.post(EventConstants.EVENT_GEO_OFFERINGS_UPDATE, 
 							modelSensorOfferings.getSosSensorOfferings());
 					
@@ -3424,14 +3441,13 @@ public class QuerySetPart implements MapIdentifier {
 		// default image
 		label.setImage(imgDotRed);
 
-		StyledText styledText = new StyledText(composite, SWT.READ_ONLY
-				| SWT.WRAP);
+		StyledText styledText = 
+				new StyledText(composite, SWT.WRAP | SWT.READ_ONLY);
 		styledText.setEnabled(false);
 		styledText.setBlockSelection(true);
 		styledText.setEditable(false);
 		styledText.setDoubleClickEnabled(false);
 		styledText.setCaret(null);
-		styledText.setAlignment(SWT.RIGHT);
 		styledText.setBackground(SWTResourceManager
 				.getColor(SWT.COLOR_WIDGET_BACKGROUND));
 		styledText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
@@ -3457,7 +3473,7 @@ public class QuerySetPart implements MapIdentifier {
 		case FORMATS:
 			c = tileFormats;
 			break;
-		case PREVIEW:
+		case SENSOR_OFFERINGS:
 			c = tilePreview;
 			break;
 		case EXPORT:
@@ -3489,11 +3505,12 @@ public class QuerySetPart implements MapIdentifier {
 	 * @return
 	 */
 	private StyledText createLiveTile(Composite parent) {
-		StyledText styledText = new StyledText(parent, SWT.READ_ONLY | SWT.WRAP);
+		StyledText styledText = 
+				new StyledText(parent, SWT.WRAP | SWT.READ_ONLY);
+		styledText.setEnabled(false);
 		styledText.setRightMargin(5);
 		styledText.setBottomMargin(5);
 		styledText.setTopMargin(5);
-		styledText.setEnabled(false);
 		styledText.setBlockSelection(true);
 		styledText.setEditable(false);
 		styledText.setDoubleClickEnabled(false);
@@ -3501,8 +3518,8 @@ public class QuerySetPart implements MapIdentifier {
 		styledText.setAlignment(SWT.RIGHT);
 		styledText.setBackground(SWTResourceManager
 				.getColor(SWT.COLOR_WIDGET_BACKGROUND));
-		styledText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false,
-				false, 1, 1));
+		styledText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true,
+				true));
 		return styledText;
 	}
 
@@ -3625,7 +3642,7 @@ public class QuerySetPart implements MapIdentifier {
 
 			break;
 
-		case PREVIEW:
+		case SENSOR_OFFERINGS:
 
 			stackLayout.topControl = stackPreview;
 
@@ -3654,7 +3671,7 @@ public class QuerySetPart implements MapIdentifier {
 			break;
 		}
 
-		previewTileActive = (tile.equals(Tile.PREVIEW) ? true : false);
+		previewTileActive = (tile.equals(Tile.SENSOR_OFFERINGS) ? true : false);
 
 		// update the stack layout
 		stack.layout();
@@ -4213,89 +4230,14 @@ public class QuerySetPart implements MapIdentifier {
 		offeringLayer.setMapId(mapId);
 	}
 
-	// /**
-	// * Adds a service to this query set
-	// *
-	// * Implements @{link ServiceManager}
-	// *
-	// * @param service
-	// */
-	// @Override
-	// public boolean addService(Service service) {
-	// if (!services.contains(service))
-	// return services.add(service);
-	// return false;
-	// }
-	//
-	// /**
-	// * Removes a service from this query set
-	// *
-	// * Implements @{link ServiceManager}
-	// *
-	// * @param service
-	// */
-	// @Override
-	// public boolean removeService(Service service) {
-	// return services.remove(service);
-	// }
-	//
+	/**
+	 * Returns the services associated with this query set 
+	 * 
+	 * @return
+	 */
 	public Collection<Service> getServices() {
 		return modelServices.getServices();
 	}
-
-	// /**
-	// * Returns the services for this query set
-	// *
-	// * Implements @{link ServiceManager}
-	// *
-	// * @return
-	// */
-	// @Override
-	// public Collection<Service> getServices() {
-	// return services;
-	// }
-	//
-	// /**
-	// * Returns the services matching the given type
-	// *
-	// * Implements @{link ServiceManager}
-	// *
-	// * @param type
-	// */
-	// @Override
-	// public Collection<Service> getServices(ServiceType type) {
-	// Collection<Service> res = new ArrayList<Service>();
-	// for (Service service : services) {
-	// if (service.getServiceType().equals(type))
-	// res.add(service);
-	// }
-	// return res;
-	// }
-
-	/**
-	 * Selects an offering, invoked by the map view
-	 * 
-	 * @param offeringItem
-	 */
-	// public void selectSensorOffering(final SensorOfferingItem offeringItem) {
-	//
-	// UIUtil.update(new Runnable() {
-	// @Override
-	// public void run() {
-	//
-	// // activate the preview tile
-	// activateTile(Tile.PREVIEW);
-	//
-	// StructuredSelection selection =
-	// new StructuredSelection(offeringItem);
-	//
-	// tableViewerSensorOfferings.setSelection(selection, true);
-	// tableViewerSensorOfferings.reveal(selection);
-	//
-	// // intermediator.fireSelectionChanged(selection);
-	// }
-	// });
-	// }
 
 	/**
 	 * Executes the steps for previewing sensor data
@@ -4372,10 +4314,11 @@ public class QuerySetPart implements MapIdentifier {
 		if (noOfServices <= 0) {
 			text = "No services selected";
 			warning = true;
-		} else if (noOfServices == 1)
+		} else if (noOfServices == 1) {
 			text = "One service selected";
-		else
+		} else {
 			text = noOfServices + " services selected";
+		}
 
 		// set text
 		liveServices.setText(text);
@@ -4405,10 +4348,11 @@ public class QuerySetPart implements MapIdentifier {
 		if (noOfOfferings <= 0) {
 			text += "No sensor offerings in region";
 			warning = true;
-		} else if (noOfOfferings == 1)
+		} else if (noOfOfferings == 1) {
 			text += "One sensor offering in region";
-		else
+		} else {
 			text += noOfOfferings + " sensor offerings in region";
+		}
 
 		// set text
 		liveGeographic.setText(text);
@@ -4432,10 +4376,11 @@ public class QuerySetPart implements MapIdentifier {
 
 		if (noProperties <= 0) {
 			text += "No observed properties selected";
-		} else if (noProperties == 1)
+		} else if (noProperties == 1) {
 			text += "One observed property selected";
-		else
+		} else {
 			text += noProperties + " observed properties selected";
+		}
 
 		text += "\n\n";
 
@@ -4482,10 +4427,11 @@ public class QuerySetPart implements MapIdentifier {
 		} else if (count == 0) {
 			text += "No matched sensor offerings";
 			warning = true;
-		} else if (count == 1)
+		} else if (count == 1) {
 			text += "One matching sensor offering";
-		else
+		} else {
 			text += count + " matching sensor offerings";
+		}
 
 		// set text
 		liveTime.setText(text);
@@ -4517,10 +4463,11 @@ public class QuerySetPart implements MapIdentifier {
 		if (count == 0) {
 			text += "No matched sensor offerings";
 			warning = true;
-		} else if (count == 1)
+		} else if (count == 1) {
 			text += "One matching sensor offering";
-		else
+		} else {
 			text += count + " matching sensor offerings";
+		}
 
 		// set text
 		liveFormats.setText(text);
@@ -4533,7 +4480,7 @@ public class QuerySetPart implements MapIdentifier {
 	 * 
 	 * @param timeFacet
 	 */
-	private void updateLiveTilePreview(long count) {
+	private void updateLiveTileSensorOfferings(long count) {
 		String text = "";
 		boolean warning = false;
 		
@@ -4551,10 +4498,11 @@ public class QuerySetPart implements MapIdentifier {
 		if (count == 0) {
 			text += "No matched sensor offerings";
 			warning = true;
-		} else if (count == 1)
+		} else if (count == 1) {
 			text += "One matching sensor offering";
-		else
+		} else {
 			text += count + " matching sensor offerings";
+		}
 
 		// set text
 		livePreview.setText(text);
@@ -4568,7 +4516,7 @@ public class QuerySetPart implements MapIdentifier {
 			livePreview.setStyleRange(styleRange);
 		}
 		
-		updateTile(Tile.PREVIEW, warning);
+		updateTile(Tile.SENSOR_OFFERINGS, warning);
 	}
 
 	/**
@@ -4577,20 +4525,33 @@ public class QuerySetPart implements MapIdentifier {
 	 * @param timeFacet
 	 * @param selectedProperties
 	 */
-	private void updateLiveTileExport(int count, int selectedProperties) {
+	private void updateLiveTileExport(long count, int selectedProperties) {
 		String text = "";
 		boolean warning = false;
+		
+		String strProperty = 
+				"An observed property must be selected";
 
 		if (count > 0 && selectedProperties > 0) {
-			text += "Let's execute the query set!";
-
+			text += "Let's export the data!";
 		} else {
-			text += "Empty query set";
-			if (selectedProperties <= 0)
-				text += "\n\nNo observed properties selected";
-
+			text += "No data to export";
 			warning = true;
 		}
+		
+		text += "\n\n";
+
+		if (count > 0) {
+			if (selectedProperties <= 0) {
+				text += strProperty;
+			} else {
+				if (count == 1) {
+					text += "One matching sensor offering";
+				} else {
+					text += count + " matching sensor offerings";
+				}
+			}
+		} 
 
 		// update button status
 		if (btnExportData != null)
@@ -4598,6 +4559,19 @@ public class QuerySetPart implements MapIdentifier {
 
 		// set text
 		liveExport.setText(text);
+		
+		if (count > 0 && selectedProperties <= 0) {
+			StyleRange styleRange = new StyleRange();
+			styleRange.start = 
+					(text.length() - 1) - strProperty.length(); 
+			styleRange.length = strProperty.length();
+			styleRange.fontStyle = SWT.BOLD;
+			liveExport.setStyleRange(styleRange);
+		}
+		
+		liveExport.redraw();
+		tileExport.update();
+//		tileExport.redraw();
 
 		updateTile(Tile.EXPORT, warning);
 	}
@@ -4765,7 +4739,7 @@ public class QuerySetPart implements MapIdentifier {
 			case FORMATS:
 				updateTileStatus(tileFormats, status);
 				break;
-			case PREVIEW:
+			case SENSOR_OFFERINGS:
 				updateTileStatus(tilePreview, status);
 				break;
 			case EXPORT:
@@ -5067,11 +5041,11 @@ public class QuerySetPart implements MapIdentifier {
 	 * 
 	 */
 	private enum Tile {
-		SERVICES, GEO_REGION, PROPERTIES, TIME, FORMATS, PREVIEW, EXPORT
+		SERVICES, GEO_REGION, PROPERTIES, TIME, FORMATS, SENSOR_OFFERINGS, EXPORT
 	}
 
 	private enum TileStatus {
-		NONE, ACTIVE_OK, ACTIVE_WARNING, INACTIVE_OK, INACTIVE_WARNING
+		ACTIVE_OK, ACTIVE_WARNING, INACTIVE_OK, INACTIVE_WARNING
 	}
 
 	/*
@@ -5143,8 +5117,6 @@ public class QuerySetPart implements MapIdentifier {
 	public void setDirty(boolean status) {
 		// update status
 		dirty.setDirty(status);
-		// update name
-		// setText(querySetName);
 	}
 
 	/**
