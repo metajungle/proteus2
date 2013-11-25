@@ -13,6 +13,7 @@ import com.iai.proteus.common.Labeling;
 import com.iai.proteus.queryset.Category;
 import com.iai.proteus.queryset.SosSensorOffering;
 import com.iai.proteus.ui.model.ObservedProperty;
+import com.iai.proteus.ui.model.ResponseFormat;
 
 /**
  * Simple label provider for viewers 
@@ -43,6 +44,12 @@ public class LabelProvider implements ILabelProvider {
 			return element.toString();
 		else if (element instanceof ObservedProperty) {
 			return Labeling.labelProperty(element.toString());
+		}
+		/*
+		 * Response formats 
+		 */
+		else if (element instanceof ResponseFormat) {
+			return element.toString();
 		}
 		
 		// default 

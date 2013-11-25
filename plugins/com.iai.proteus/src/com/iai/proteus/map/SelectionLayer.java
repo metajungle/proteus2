@@ -15,11 +15,12 @@ import gov.nasa.worldwind.render.ShapeAttributes;
 
 import java.awt.Color;
 import java.util.Arrays;
-import java.util.List;
+import java.util.Collection;
 
 import org.apache.log4j.Logger;
 
 import com.iai.proteus.common.sos.model.SensorOffering;
+import com.iai.proteus.queryset.SosSensorOffering;
 
 
 /**
@@ -53,7 +54,7 @@ public class SelectionLayer extends RenderableLayer {
 		/* marker attributes */
 		placemarkAttributes = new PointPlacemarkAttributes();
 		placemarkAttributes.setUsePointAsDefaultImage(true);
-		placemarkAttributes.setScale(20d);
+		placemarkAttributes.setScale(15d);
 		placemarkAttributes.setLineMaterial(material);
 	}
 
@@ -80,31 +81,33 @@ public class SelectionLayer extends RenderableLayer {
 	/**
 	 * Hides the selection
 	 */
-	public void hideSelection() {
+	public void clearSelection() {
 		removeAllRenderables();
 	}
 
 	/**
-	 * Shows the selection according to the given sensor offering
+	 * Sets the selection according to the given sensor offering
 	 *
 	 * @param sensorOffering
 	 */
-	public void showSelection(SensorOffering sensorOffering) {
-		showSelection(Arrays.asList(new SensorOffering[] { sensorOffering }));
+	public void setSelection(SosSensorOffering sensorOffering) {
+		setSelection(Arrays.asList(new SosSensorOffering[] { sensorOffering }));
 	}
 
 	/**
-	 * Shows the selection according to the given sensor offerings
+	 * Sets the selection according to the given sensor offerings
 	 *
 	 * @param sensorOfferings
 	 */
-	public void showSelection(List<SensorOffering> sensorOfferings) {
-		// hide old selection
-		hideSelection();
+	public void setSelection(Collection<SosSensorOffering> sensorOfferings) {
+		// clear old selection
+		clearSelection();
 
 		// add offerings selections
-		for (SensorOffering sensorOffering : sensorOfferings) {
+		for (SosSensorOffering offering : sensorOfferings) {
 
+			SensorOffering sensorOffering = offering.getSensorOffering();
+			
 			Renderable renderable = null;
 
 			if (WorldWindUtils.isRegion(sensorOffering)) {

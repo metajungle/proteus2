@@ -16,6 +16,8 @@ public class EventConstants {
 	public static final String EVENT_GEO_SELECTION_NEW = "geobrowser/selection/new";
 	// sent by query set to map for selected offerings
 	public static final String EVENT_GEO_SELECTION_UPDATED = "geobrowser/selection/updated";
+	// sent by query set to map for focusing on offering
+	public static final String EVENT_GEO_SELECTION_FOCUS = "geobrowser/selection/focus";
 	
 	// sent by query set to map when sensor offerings are changed/updated 
 	public static final String EVENT_GEO_OFFERINGS_UPDATE = "geobrowser/offerings/update";

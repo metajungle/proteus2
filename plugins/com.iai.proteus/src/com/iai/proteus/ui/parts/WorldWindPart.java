@@ -57,10 +57,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 
-import com.iai.proteus.common.sos.model.SensorOffering;
 import com.iai.proteus.events.EventConstants;
 import com.iai.proteus.map.AlertLayer;
 import com.iai.proteus.map.SectorSelector;
+import com.iai.proteus.map.SelectionLayer;
 import com.iai.proteus.map.SensorOfferingMarker;
 import com.iai.proteus.map.WorldWindUtils;
 import com.iai.proteus.map.wms.MapAVKey;
@@ -72,7 +72,6 @@ import com.iai.proteus.model.map.IMapLayer;
 import com.iai.proteus.model.map.WmsMapLayer;
 import com.iai.proteus.model.map.WmsSavedMap;
 import com.iai.proteus.queryset.RearrangeMapsEventValue;
-import com.iai.proteus.queryset.SosOfferingLayer;
 import com.iai.proteus.queryset.SosSensorOffering;
 import com.iai.proteus.ui.UIUtil;
 
@@ -96,14 +95,15 @@ public class WorldWindPart implements SelectListener, PropertyChangeListener {
 	
 	private static WorldWindowGLCanvas world;
 
-	/*
-	 * Fixed Layers
-	 */
+	// Fixed layers 
 	private SectorSelector selector;
 	private Sector latestUserSelection;
 	
-	private RenderableLayer offeringsLayer = new RenderableLayer(); 
+	// renderable layer with sensor offerings
+	private RenderableLayer offeringsLayer; 
 
+	// layer for showing the current offering selection
+	private SelectionLayer selectionLayer;
 
     // the ToolTipController can be used to show a tool tip over markers and such
     protected ToolTipController toolTipController;
@@ -132,7 +132,11 @@ public class WorldWindPart implements SelectListener, PropertyChangeListener {
 		// initialize sector selector 
 		initializeSectorSelection();
 		
+		offeringsLayer = new RenderableLayer();
 		getWwd().getModel().getLayers().add(offeringsLayer);
+		
+		selectionLayer = new SelectionLayer(getWwd());
+		getWwd().getModel().getLayers().add(selectionLayer);
 
 		this.toolTipController =
 				new ToolTipController(this.getWwd(), AVKey.DISPLAY_NAME, null);
@@ -229,10 +233,27 @@ public class WorldWindPart implements SelectListener, PropertyChangeListener {
 	 */
 	@Inject
 	@Optional
-	private void receiveEvent(
+	private void eventUpdateSelection(
 			@UIEventTopic(EventConstants.EVENT_GEO_SELECTION_UPDATED) SosSensorOffering offering) {
 
 		if (offering != null) {
+			// update selection 
+			selectionLayer.setSelection(offering);
+		}
+	}
+	
+	/**
+	 * Handle updated sensor offering selection 
+	 * 
+	 * @param offering
+	 */
+	@Inject
+	@Optional
+	private void eventFocusOnSelection(
+			@UIEventTopic(EventConstants.EVENT_GEO_SELECTION_FOCUS) SosSensorOffering offering) {
+
+		if (offering != null) {
+			// center map
 			Position pos =
 					WorldWindUtils.getCentralPosition(offering.getSensorOffering());
 			
@@ -241,8 +262,7 @@ public class WorldWindPart implements SelectListener, PropertyChangeListener {
 			
 			WorldWindUtils.moveToLocation(getWwd().getView(), point);
 		}
-	}
-	
+	}	
 	
 	/**
 	 * Passing the focus request to the viewer's control.
@@ -367,29 +387,29 @@ public class WorldWindPart implements SelectListener, PropertyChangeListener {
 	 *
 	 * @param mapLayers
 	 */
-	private void deleteLayers(Collection<IMapLayer> mapLayers) {
-		for (IMapLayer mapLayer : mapLayers) {
-			deleteLayer(mapLayer);
-		}
-	}
+//	private void deleteLayers(Collection<IMapLayer> mapLayers) {
+//		for (IMapLayer mapLayer : mapLayers) {
+//			deleteLayer(mapLayer);
+//		}
+//	}
 
 	/**
 	 * Deletes the given map layer (by @{link MapId}), if it exists
 	 *
 	 * @param mapLayer
 	 */
-	private void deleteLayer(IMapLayer mapLayer) {
-		Layer layer = getLayer(mapLayer);
-		if (layer != null) {
-			if (layer instanceof SosOfferingLayer) {
-				SosOfferingLayer offeringLayer = (SosOfferingLayer) layer;
-				// prepare to delete sensor offering layer
-				offeringLayer.prepareLayerDelete();
-			}
-			// remove layer
-			getWwd().getModel().getLayers().remove(layer);
-		}
-	}
+//	private void deleteLayer(IMapLayer mapLayer) {
+//		Layer layer = getLayer(mapLayer);
+//		if (layer != null) {
+//			if (layer instanceof SosOfferingLayer) {
+//				SosOfferingLayer offeringLayer = (SosOfferingLayer) layer;
+//				// prepare to delete sensor offering layer
+//				offeringLayer.prepareLayerDelete();
+//			}
+//			// remove layer
+//			getWwd().getModel().getLayers().remove(layer);
+//		}
+//	}
 
 
 	/**
@@ -411,16 +431,16 @@ public class WorldWindPart implements SelectListener, PropertyChangeListener {
 	 * @param color
 	 * @param serviceEndpoint
 	 */
-	private void setSosOfferingLayerColor(MapId mapId, Color color, 
-			String serviceEndpoint) 
-	{
-		Layer layer = getLayer(mapId);
-		if (layer != null && layer instanceof SosOfferingLayer) {
-			SosOfferingLayer offeringLayer = (SosOfferingLayer) layer;
-			// set the color for the offerings from the relevant service 
-			offeringLayer.setOfferingColorForService(color, serviceEndpoint);
-		}
-	}
+//	private void setSosOfferingLayerColor(MapId mapId, Color color, 
+//			String serviceEndpoint) 
+//	{
+//		Layer layer = getLayer(mapId);
+//		if (layer != null && layer instanceof SosOfferingLayer) {
+//			SosOfferingLayer offeringLayer = (SosOfferingLayer) layer;
+//			// set the color for the offerings from the relevant service 
+//			offeringLayer.setOfferingColorForService(color, serviceEndpoint);
+//		}
+//	}
 	
 
 	/**
@@ -428,53 +448,53 @@ public class WorldWindPart implements SelectListener, PropertyChangeListener {
 	 *
 	 * @param mapLayers
 	 */
-	private void activateLayers(Collection<IMapLayer> mapLayers) {
-
-		for (Layer layer : getWwd().getModel().getLayers()) {
-			
-			boolean found = false;
-			
-			// NOTE: we only deal with layers that have the right metadata 
-			Object obj = layer.getValue(MapAVKey.MAP_ID);
-			if (obj != null && obj instanceof String) {
-				String mapIdStr = (String) obj;
-
-				for (IMapLayer mapLayer : mapLayers) {
-					// we found a matching map layer
-					if (mapLayer.getMapId().toString().equals(mapIdStr)) {
-
-						// enable layers appropriately 
-						if (layer instanceof SosOfferingLayer) {
-							layer.setEnabled(true);
-						} else {
-							layer.setEnabled(mapLayer.isActive());
-						}
-						
-						// indicate that we found the layer we were looking for
-						found = true;
-						break;
-					}
-				}
-				
-				// if the layer was not found, but did have a 
-				// {@link MapAVKey.MAP_ID} value, disable the layer
-				// because it is not part of our context
-				if (!found) {
-					layer.setEnabled(false);
-				}
-				
-				// special handling of @{link SosOfferingLayer} 
-				if (layer instanceof SosOfferingLayer) {
-					SosOfferingLayer offeringLayer = (SosOfferingLayer) layer;
-					if (found) {
-						offeringLayer.showSector();
-					} else {
-						offeringLayer.hideSector();
-					}					
-				}
-			}
-		}
-	}	
+//	private void activateLayers(Collection<IMapLayer> mapLayers) {
+//
+//		for (Layer layer : getWwd().getModel().getLayers()) {
+//			
+//			boolean found = false;
+//			
+//			// NOTE: we only deal with layers that have the right metadata 
+//			Object obj = layer.getValue(MapAVKey.MAP_ID);
+//			if (obj != null && obj instanceof String) {
+//				String mapIdStr = (String) obj;
+//
+//				for (IMapLayer mapLayer : mapLayers) {
+//					// we found a matching map layer
+//					if (mapLayer.getMapId().toString().equals(mapIdStr)) {
+//
+//						// enable layers appropriately 
+//						if (layer instanceof SosOfferingLayer) {
+//							layer.setEnabled(true);
+//						} else {
+//							layer.setEnabled(mapLayer.isActive());
+//						}
+//						
+//						// indicate that we found the layer we were looking for
+//						found = true;
+//						break;
+//					}
+//				}
+//				
+//				// if the layer was not found, but did have a 
+//				// {@link MapAVKey.MAP_ID} value, disable the layer
+//				// because it is not part of our context
+//				if (!found) {
+//					layer.setEnabled(false);
+//				}
+//				
+//				// special handling of @{link SosOfferingLayer} 
+//				if (layer instanceof SosOfferingLayer) {
+//					SosOfferingLayer offeringLayer = (SosOfferingLayer) layer;
+//					if (found) {
+//						offeringLayer.showSector();
+//					} else {
+//						offeringLayer.hideSector();
+//					}					
+//				}
+//			}
+//		}
+//	}	
 	
 	/**
 	 * Re-arranges layers 
@@ -552,15 +572,17 @@ public class WorldWindPart implements SelectListener, PropertyChangeListener {
 		}
 	}	
 	
+	/**
+	 * Set the sensor offering markers 
+	 * 
+	 * @param items
+	 */
 	@Inject
 	@Optional
 	void receiveEvent(@UIEventTopic(EventConstants.EVENT_GEO_OFFERINGS_UPDATE) Collection<SosSensorOffering> items) {
-		System.out.println("Items: " + items.size());
-		
-		List<Renderable> markers = WorldWindUtils.getCapabilitiesMarkers(items);
-		
+		List<Renderable> markers = 
+				WorldWindUtils.getCapabilitiesMarkers(items);
 		offeringsLayer.setRenderables(markers);
-		
 		getWwd().redraw();
 	}	
 	
@@ -571,19 +593,19 @@ public class WorldWindPart implements SelectListener, PropertyChangeListener {
 	 * @param mapId
 	 * @param bbox
 	 */
-	private void setRegionSelection(MapId mapId, double[] bbox) {
-		Layer layer = getLayer(mapId);
-		if (layer != null) {
-			if (layer instanceof SosOfferingLayer) {
-				SosOfferingLayer offeringLayer = (SosOfferingLayer) layer;
-				// create sector
-				Sector sector = Sector.fromDegrees(bbox);
-				System.out.println("SECTOR: " + sector);
-				// set the sector for the offering layer 
-				offeringLayer.setSector(sector);
-			}
-		}
-	}
+//	private void setRegionSelection(MapId mapId, double[] bbox) {
+//		Layer layer = getLayer(mapId);
+//		if (layer != null) {
+//			if (layer instanceof SosOfferingLayer) {
+//				SosOfferingLayer offeringLayer = (SosOfferingLayer) layer;
+//				// create sector
+//				Sector sector = Sector.fromDegrees(bbox);
+//				System.out.println("SECTOR: " + sector);
+//				// set the sector for the offering layer 
+//				offeringLayer.setSector(sector);
+//			}
+//		}
+//	}
 
 	/**
 	 * Handles events
@@ -718,14 +740,14 @@ public class WorldWindPart implements SelectListener, PropertyChangeListener {
 	 *
 	 * @param sensorOfferings
 	 */
-	private void showSelectionInOfferingLayer(List<SensorOffering> sensorOfferings) {
-		for (Layer layer : getWwd().getModel().getLayers()) {
-			if (layer instanceof SosOfferingLayer && layer.isEnabled()) {
-				SosOfferingLayer offeringLayer = (SosOfferingLayer) layer;
-				offeringLayer.showSelection(sensorOfferings);
-			}
-		}
-	}
+//	private void showSelectionInOfferingLayer(List<SensorOffering> sensorOfferings) {
+//		for (Layer layer : getWwd().getModel().getLayers()) {
+//			if (layer instanceof SosOfferingLayer && layer.isEnabled()) {
+//				SosOfferingLayer offeringLayer = (SosOfferingLayer) layer;
+//				offeringLayer.showSelection(sensorOfferings);
+//			}
+//		}
+//	}
 	
 	/**
 	 * Toggling WMS map layer 
@@ -885,37 +907,37 @@ public class WorldWindPart implements SelectListener, PropertyChangeListener {
      *
      * @return
      */
-    private Collection<Renderable> getSelectedOfferingMarkers() {
-
-    	Collection<Renderable> markers =
-    			new ArrayList<Renderable>();
-
-//    	if (pickedMarkers.size() > 0) {
-//    		for (SensorOfferingMarker marker : pickedMarkers) {
-//    			markers.add(marker);
+//    private Collection<Renderable> getSelectedOfferingMarkers() {
+//
+//    	Collection<Renderable> markers =
+//    			new ArrayList<Renderable>();
+//
+////    	if (pickedMarkers.size() > 0) {
+////    		for (SensorOfferingMarker marker : pickedMarkers) {
+////    			markers.add(marker);
+////    		}
+////    		return markers;
+////    	}
+//
+//    	for (Layer layer : getWwd().getModel().getLayers()) {
+//    		if (layer instanceof SosOfferingLayer) {
+//    			SosOfferingLayer sosLayer = (SosOfferingLayer) layer;
+//    			if (sosLayer.isEnabled()) {
+//    				int count = 0;
+//    				for (Renderable renderable : sosLayer.getRenderables()) {
+//    					if (renderable instanceof SensorOfferingMarker) {
+//    						markers.add(renderable);
+//    						count++;
+//    					}
+//    				}
+//    				log.trace("Layer: " +
+//    						sosLayer.getName() + " contributed " +
+//    						count + " markers");
+//    			}
 //    		}
-//    		return markers;
 //    	}
-
-    	for (Layer layer : getWwd().getModel().getLayers()) {
-    		if (layer instanceof SosOfferingLayer) {
-    			SosOfferingLayer sosLayer = (SosOfferingLayer) layer;
-    			if (sosLayer.isEnabled()) {
-    				int count = 0;
-    				for (Renderable renderable : sosLayer.getRenderables()) {
-    					if (renderable instanceof SensorOfferingMarker) {
-    						markers.add(renderable);
-    						count++;
-    					}
-    				}
-    				log.trace("Layer: " +
-    						sosLayer.getName() + " contributed " +
-    						count + " markers");
-    			}
-    		}
-    	}
-    	return markers;
-    }
+//    	return markers;
+//    }
 
     /**
      * Toggle visibility of a base layer map

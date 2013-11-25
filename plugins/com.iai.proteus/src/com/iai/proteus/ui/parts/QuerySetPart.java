@@ -105,7 +105,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
-import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
@@ -119,7 +118,6 @@ import org.eclipse.wb.swt.old.SWTResourceManager;
 import org.joda.time.Period;
 
 import com.iai.proteus.common.Labeling;
-import com.iai.proteus.common.sos.SupportedResponseFormats;
 import com.iai.proteus.common.sos.data.Field;
 import com.iai.proteus.common.sos.model.SensorOffering;
 import com.iai.proteus.common.sos.model.SosCapabilities;
@@ -127,10 +125,6 @@ import com.iai.proteus.common.sos.util.SosUtil;
 import com.iai.proteus.dialogs.ManageQuerySetServicesDialog;
 import com.iai.proteus.events.EventConstants;
 import com.iai.proteus.map.WorldWindUtils;
-import com.iai.proteus.model.MapId;
-import com.iai.proteus.model.SensorOfferingLayer;
-import com.iai.proteus.model.map.IMapLayer;
-import com.iai.proteus.model.map.MapIdentifier;
 import com.iai.proteus.model.map.MapLayer;
 import com.iai.proteus.model.map.WmsMapLayer;
 import com.iai.proteus.model.map.WmsSavedMap;
@@ -140,7 +134,6 @@ import com.iai.proteus.model.services.ServiceRoot;
 import com.iai.proteus.model.services.ServiceType;
 import com.iai.proteus.plot.Variables;
 import com.iai.proteus.plot.VariablesHolder;
-import com.iai.proteus.queryset.AvailableFormatsHolder;
 import com.iai.proteus.queryset.Category;
 import com.iai.proteus.queryset.Facet;
 import com.iai.proteus.queryset.FacetChangeToggle;
@@ -156,6 +149,8 @@ import com.iai.proteus.ui.SwtUtil;
 import com.iai.proteus.ui.UIUtil;
 import com.iai.proteus.ui.model.ObservedProperty;
 import com.iai.proteus.ui.model.ObservedPropertyModel;
+import com.iai.proteus.ui.model.ResponseFormat;
+import com.iai.proteus.ui.model.ResponseFormatsModel;
 import com.iai.proteus.ui.model.SensorOfferingModel;
 import com.iai.proteus.ui.model.ServiceModel;
 import com.iai.proteus.util.Util;
@@ -168,7 +163,7 @@ import com.iai.proteus.util.Util;
  * @author Jakob Henriksson
  * 
  */
-public class QuerySetPart implements MapIdentifier {
+public class QuerySetPart {
 
 	private static final Logger log = Logger.getLogger(QuerySetPart.class);
 
@@ -211,22 +206,9 @@ public class QuerySetPart implements MapIdentifier {
 	private SosBoundingBox modelBoundingBox;
 	private ObservedPropertyModel modelObservedProperties;
 	private SensorOfferingModel modelSensorOfferings;
+	private ResponseFormatsModel modelResponseFormats;
 
 	private FacetDisplayStrategy facetDisplayStrategy;
-
-	// Holds query set services
-	// private Collection<Service> services;
-	// Holds observed properties
-	// private Set<String> selectedObservedProperties = new HashSet<>();
-
-	// Holds sensor offerings
-	private Collection<SosSensorOffering> sensorOfferings;
-
-	// The basic sensor offering layer part of this context (query set)
-	private SensorOfferingLayer offeringLayer;
-
-	// Holds the geographic restrictions
-	// private Sector sector;
 
 	// Holds observed property URIs that should be set to true in the
 	// @{link ObservedPropertiesHolder} model (only used when loading
@@ -234,7 +216,7 @@ public class QuerySetPart implements MapIdentifier {
 	private Collection<String> activeObservedPropertyURIs;
 
 	// Holds all the available sensor data formats
-	private AvailableFormatsHolder availableFormatsHolder;
+//	private DataFormatsModel availableFormatsHolder;
 
 	// active facets that constrain what is being displayed
 	private Set<FacetChangeToggle> activeFacets;
@@ -311,7 +293,7 @@ public class QuerySetPart implements MapIdentifier {
 	private TableViewer tableViewerSensorOfferings;
 	private Table tableSensorOfferings;
 
-	private TableViewer tableViewerUnsupportedFormats;
+	private CheckboxTreeViewer treeViewerResponseFormats;
 
 	// selection provider intermediator
 	// private SelectionProviderIntermediate intermediator;
@@ -455,7 +437,7 @@ public class QuerySetPart implements MapIdentifier {
 		modelBoundingBox = new SosBoundingBox();
 		modelSensorOfferings = new SensorOfferingModel();
 		modelObservedProperties = new ObservedPropertyModel();
-		availableFormatsHolder = new AvailableFormatsHolder();
+		modelResponseFormats = new ResponseFormatsModel();
 
 		activeObservedPropertyURIs = new ArrayList<String>();
 
@@ -522,7 +504,7 @@ public class QuerySetPart implements MapIdentifier {
 		// this.setText(querySetName);
 		// setImage(imgDocument);
 
-		offeringLayer = new SensorOfferingLayer();
+//		offeringLayer = new SensorOfferingLayer();
 
 		listRangeVariables = new ArrayList<String>();
 
@@ -765,7 +747,7 @@ public class QuerySetPart implements MapIdentifier {
 		liveFormats = createLiveTile(tileFormats);
 		// set and update the live tile text
 		liveFormats.setText("");
-		updateLiveTileFormats(getActiveFormatRestriction(), 0);
+		updateLiveTileFormats(0, 0L);
 
 		/*
 		 * PREVIEW
@@ -855,42 +837,18 @@ public class QuerySetPart implements MapIdentifier {
 		itemServicesManager.setImage(imgAdd);
 		// manage services listener
 		itemServicesManager.addSelectionListener(new SelectionAdapter() {
-
-			@SuppressWarnings("serial")
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				// create and open dialog to manage services
 				ManageQuerySetServicesDialog dialog = new ManageQuerySetServicesDialog(
 						shell, modelServices, ServiceType.SOS);
 				if (dialog.open() == IDialogConstants.OK_ID) {
-
-					// toggle layers - send event
-					// eventAdminService.sendEvent(new
-					// Event(EventTopic.QS_TOGGLE_SERVICES.toString(),
-					// new HashMap<String, Object>() {
-					// {
-					// put("object", getMapId());
-					// put("value", getServices());
-					// }
-					// }));
-
 					// update model
-					// updateQuerySetModel(getServices());
 					updateSelectedServices();
-
-					// count active services
-					// int countActiveServices = 0;
-					// for (Service service : getServices())
-					// countActiveServices += service.isActive() ? 1 : 0;
-					// // update live services tile
-					// updateLiveTileServices(countActiveServices);
-
 					// refresh viewer as input might have changed
 					tableViewerSosServices.refresh();
-
 					// mark as dirty
 					setDirty(true);
-
 					// TODO: need to update layers as layers might have been
 					// deleted
 				}
@@ -1264,7 +1222,6 @@ public class QuerySetPart implements MapIdentifier {
 
 		// listener to update facets
 		treeObservedProperties.addSelectionListener(new SelectionAdapter() {
-			@SuppressWarnings("serial")
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				if (e.detail == SWT.CHECK) {
@@ -1296,24 +1253,6 @@ public class QuerySetPart implements MapIdentifier {
 					// update offerings
 					updateOfferings();
 
-					//
-					// // collect all the facet changes
-					// final Collection<FacetChangeToggle> changes =
-					// collectFacets(item);
-					//
-					// // update state of facet changes
-					// updateFacetState(changes);
-					//
-					// // fire event
-					// eventAdminService.sendEvent(new
-					// Event(EventTopic.QS_FACET_CHANGED.toString(),
-					// new HashMap<String, Object>() {
-					// {
-					// put("object", getMapId());
-					// put("value", changes);
-					// }
-					// }));
-					//
 					// mark as dirty
 					setDirty(true);
 				}
@@ -1483,69 +1422,100 @@ public class QuerySetPart implements MapIdentifier {
 				SWT.BOLD));
 		lblFormats.setText("Data formats");
 
-		final Button btnFormatsAll = new Button(stackFormats, SWT.TOGGLE);
+		final Button btnFormatsAll = new Button(stackFormats, SWT.PUSH);
 		btnFormatsAll.setText(FormatFacet.ALL.toString());
 		btnFormatsAll.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true,
-				false, 1, 1));
-		// default
-		btnFormatsAll.setSelection(true);
+				false));
 
-		final Button btnFormatsSupported = new Button(stackFormats, SWT.TOGGLE);
+		final Button btnFormatsSupported = new Button(stackFormats, SWT.PUSH);
 		btnFormatsSupported.setText(FormatFacet.SUPPORTED.toString());
 		btnFormatsSupported.setLayoutData(new GridData(SWT.FILL, SWT.NONE,
-				true, false, 1, 1));
+				true, false));
 
-		new Label(stackFormats, SWT.NONE).setText("Supported formats");
+		new Label(stackFormats, SWT.NONE).setText("Available data formats");
 
-		TableViewer tableViewerSupportedFormats = CheckboxTableViewer
-				.newCheckList(stackFormats, SWT.BORDER);
+		treeViewerResponseFormats = new CheckboxTreeViewer(stackFormats, SWT.BORDER);
 
-		tableViewerSupportedFormats.setContentProvider(contentProvider);
-		tableViewerSupportedFormats.setInput(SupportedResponseFormats.values());
-
-		final Table tableSupportedFormats = tableViewerSupportedFormats
-				.getTable();
-		tableSupportedFormats.setLayoutData(new GridData(SWT.FILL, SWT.FILL,
+		TreeViewerColumn colDataFormat = 
+				new TreeViewerColumn(treeViewerResponseFormats, SWT.NONE);
+		colDataFormat.getColumn().setText("Data format");
+		colDataFormat.getColumn().setWidth(200);
+		colDataFormat.setLabelProvider(new ColumnLabelProvider() {
+			@Override
+			public String getText(Object element) {
+				if (element instanceof ResponseFormat) {
+					return ((ResponseFormat) element).getResponseFormat();
+				}
+				// default 
+				return "";
+			}
+		});
+		
+		Tree treeDataFormats = treeViewerResponseFormats.getTree();
+		treeDataFormats.setLayoutData(new GridData(SWT.FILL, SWT.FILL,
 				true, true));
-		tableSupportedFormats.setEnabled(false);
+		treeDataFormats.setHeaderVisible(true);
+		treeDataFormats.setLinesVisible(false);
+		
+		treeViewerResponseFormats.setContentProvider(contentProvider);
+		treeViewerResponseFormats.setInput(modelResponseFormats);
+		treeViewerResponseFormats
+				.addSelectionChangedListener(new ISelectionChangedListener() {
+					@Override
+					public void selectionChanged(SelectionChangedEvent event) {
+					}
+				});
+		treeViewerResponseFormats
+				.addCheckStateListener(new ICheckStateListener() {
+					@Override
+					public void checkStateChanged(CheckStateChangedEvent event) {
+						Object elmt = event.getElement();
+						if (elmt instanceof ResponseFormat) {
+							ResponseFormat format = (ResponseFormat) elmt;
+							// update model element
+							format.setSelected(event.getChecked());
+							// update offerings
+							updateOfferings();
+						}
+					}
+				});
 
+		treeViewerResponseFormats
+				.setCheckStateProvider(new ICheckStateProvider() {
+					@Override
+					public boolean isGrayed(Object element) {
+						// default
+						return false;
+					}
+
+					@Override
+					public boolean isChecked(Object element) {
+						if (element instanceof ResponseFormat) {
+							ResponseFormat format = (ResponseFormat) element;
+							return format.isSelected();
+						}
+						// default 
+						return false;
+					}
+				});		
+		
 		btnFormatsAll.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				updateFormatButtonSelection(e.widget);
-				// un-check all
-				for (TableItem item : tableSupportedFormats.getItems()) {
-					item.setChecked(false);
-				}
-				updateFormatRestriction(FormatFacet.ALL);
+				modelResponseFormats.deselectAll();
+				treeViewerResponseFormats.refresh();
+				updateOfferings();
 			}
 		});
 
 		btnFormatsSupported.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				updateFormatButtonSelection(e.widget);
-				// check all
-				for (TableItem item : tableSupportedFormats.getItems()) {
-					item.setChecked(true);
-				}
-				updateFormatRestriction(FormatFacet.SUPPORTED);
+				modelResponseFormats.selectSupported();
+				treeViewerResponseFormats.refresh();
+				updateOfferings();
 			}
 		});
-
-		new Label(stackFormats, SWT.NONE).setText("Available formats");
-
-		tableViewerUnsupportedFormats = CheckboxTableViewer.newCheckList(
-				stackFormats, SWT.BORDER);
-
-		tableViewerUnsupportedFormats.setContentProvider(contentProvider);
-		tableViewerUnsupportedFormats.setInput(availableFormatsHolder);
-
-		Table tableUnsupportedFormats = tableViewerUnsupportedFormats
-				.getTable();
-		tableUnsupportedFormats.setLayoutData(new GridData(SWT.FILL, SWT.FILL,
-				true, true));
-		tableUnsupportedFormats.setEnabled(false);
 
 		/*
 		 * STACK: preview
@@ -1596,9 +1566,13 @@ public class QuerySetPart implements MapIdentifier {
 							if (selection.size() == 1) {
 								Object first = selection.getFirstElement();
 								if (first instanceof SosSensorOffering) {
-									SosSensorOffering item = 
+									SosSensorOffering offering = 
 											(SosSensorOffering) first;
 
+									// send event to map that selection was updated
+									eventBroker.post(EventConstants.EVENT_GEO_SELECTION_UPDATED, 
+											offering);
+									
 									/*
 									 * Update the options for selecting observed
 									 * properties
@@ -1627,18 +1601,15 @@ public class QuerySetPart implements MapIdentifier {
 				.addDoubleClickListener(new IDoubleClickListener() {
 					@Override
 					public void doubleClick(DoubleClickEvent event) {
-						ISelection selection = event.getSelection();
-						if (selection instanceof StructuredSelection) {
-							Object elmt = ((StructuredSelection) selection)
-									.getFirstElement();
-							if (elmt instanceof SosSensorOffering) {
-								SosSensorOffering offering = 
-										(SosSensorOffering) elmt;
-								
-								// send event to map that selection was updated
-								eventBroker.post(EventConstants.EVENT_GEO_SELECTION_UPDATED, 
-										offering);
-							}
+						Object selected = 
+								SwtUtil.getFirstSelectedElement(event.getSelection());
+						if (selected != null && selected instanceof SosSensorOffering) {
+							SosSensorOffering offering = 
+									(SosSensorOffering) selected;
+							
+							// send event to map that selection was updated
+							eventBroker.post(EventConstants.EVENT_GEO_SELECTION_FOCUS, 
+									offering);
 						}
 					}
 				});
@@ -2967,17 +2938,31 @@ public class QuerySetPart implements MapIdentifier {
 		CheckboxTableViewer tableViewer = CheckboxTableViewer.newCheckList(
 				composite, SWT.BORDER | SWT.FULL_SELECTION);
 
-		final TableViewerColumn colEmpty = new TableViewerColumn(tableViewer,
-				SWT.NONE);
-		colEmpty.getColumn().setText("");
-		colEmpty.getColumn().setWidth(20);
-		colEmpty.setLabelProvider(new ColumnLabelProvider() {
+//		final TableViewerColumn colEmpty = new TableViewerColumn(tableViewer,
+//				SWT.NONE);
+//		colEmpty.getColumn().setText("");
+//		colEmpty.getColumn().setWidth(20);
+//		colEmpty.setLabelProvider(new ColumnLabelProvider() {
+//			@Override
+//			public String getText(Object element) {
+//				return "";
+//			}
+//		});
+
+		TableViewerColumn colName = new TableViewerColumn(tableViewer, SWT.NONE);
+		colName.getColumn().setText("Name");
+		colName.getColumn().setWidth(200);
+		colName.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
+				if (element instanceof Service) {
+					Service service = (Service) element;
+					return service.getName();
+				}
 				return "";
 			}
 		});
-
+		
 		final TableViewerColumn colColor = new TableViewerColumn(tableViewer,
 				SWT.NONE);
 		colColor.getColumn().setText("Color");
@@ -3008,21 +2993,7 @@ public class QuerySetPart implements MapIdentifier {
 			public void widgetSelected(SelectionEvent e) {
 				System.out.println("Change color...");
 			}
-		});
-
-		TableViewerColumn colName = new TableViewerColumn(tableViewer, SWT.NONE);
-		colName.getColumn().setText("Name");
-		colName.getColumn().setWidth(200);
-		colName.setLabelProvider(new ColumnLabelProvider() {
-			@Override
-			public String getText(Object element) {
-				if (element instanceof Service) {
-					Service service = (Service) element;
-					return service.getName();
-				}
-				return "";
-			}
-		});
+		});		
 
 		final TableViewerColumn colUrl = new TableViewerColumn(tableViewer,
 				SWT.NONE);
@@ -3054,9 +3025,6 @@ public class QuerySetPart implements MapIdentifier {
 
 				// updates the selected services
 				updateSelectedServices();
-
-				// update offerings
-//				updateOfferings();
 
 				// mark as dirty
 				setDirty(true);
@@ -3091,24 +3059,34 @@ public class QuerySetPart implements MapIdentifier {
 	public void updateSelectedServices() {
 
 		Collection<String> properties = new HashSet<>();
+		Collection<String> formats = new HashSet<>();
 
 		// count the active services
 		for (Service service : getServices()) {
 			if (service.isActive()) {
 				// TODO: encapsulate in Job (since we might use network)
 				// get the capabilities (will be taken from cache if possible)
-				SosCapabilities capabilities = SosUtil.getCapabilities(service
-						.getEndpoint());
-				Collection<SensorOffering> offerings = capabilities
-						.getOfferings();
+				SosCapabilities capabilities = 
+						SosUtil.getCapabilities(service.getEndpoint());
+				Collection<SensorOffering> offerings = 
+						capabilities.getOfferings();
+				
 				for (SensorOffering offering : offerings) {
 					properties.addAll(offering.getObservedProperties());
+					formats.addAll(offering.getResponseFormats());
 				}
 			}
 		}
 
+		// TODO: update all the available facet data, including data formats
+		
 		// update the available observed properties
 		updateObservedProperties(properties);
+		
+		System.out.println("Formats: " + formats.size());
+		
+		// update the available response formats
+		updateResponseFormats(formats);
 
 		// update the offerings
 		updateOfferings();
@@ -3164,15 +3142,18 @@ public class QuerySetPart implements MapIdentifier {
 					}
 					
 					// counters 
-					final AtomicLong countServices = new AtomicLong(0);
+					final AtomicLong countServices = new AtomicLong();
 					final AtomicLong countOfferingsByBoundingBox = 
-							new AtomicLong(0);
+							new AtomicLong();
 					final AtomicLong countOfferingsByObservedProperties = 
-							new AtomicLong(0);
+							new AtomicLong();
+					final AtomicLong countOfferingsByDataFormats = 
+							new AtomicLong();
 
 					// clear sensor offerings 
 					modelSensorOfferings.clear();
 					
+					// TODO: optimize 
 					for (Service service : getServices()) {
 						if (service.isActive()) {
 							
@@ -3227,8 +3208,16 @@ public class QuerySetPart implements MapIdentifier {
 								
 								// TODO: filter by time
 								
-								// TODO: filter by result format 
+								// filter by result format
+								selected = modelResponseFormats.getSelectedResponseFormats().size();
+								if (selected > 0) {
+									if (!modelResponseFormats.containsSelectedFormat(offering.getResponseFormats())) {
+										continue;
+									}
+								}
 
+								countOfferingsByDataFormats.addAndGet(1L);
+									
 								// collect all matching sensor offerings 
 								modelSensorOfferings.addSosSensorOffering(service, 
 										offering);
@@ -3242,6 +3231,9 @@ public class QuerySetPart implements MapIdentifier {
 					final int noSelectedProperties =
 							modelObservedProperties.getSelectedObservedProperties().size();
 
+					final int noSelectedFormats = 
+							modelResponseFormats.getSelectedResponseFormats().size();
+					
 					// update tiles and viewers  
 					sync.asyncExec(new Runnable() {
 						@Override
@@ -3259,10 +3251,15 @@ public class QuerySetPart implements MapIdentifier {
 							// observed properties
 							updateLiveTileObservedProperties(noSelectedProperties, 
 									countByProperties);
+							// TODO: update time tile
+							// data formats 
+							updateLiveTileFormats(noSelectedFormats, 
+									countOfferingsByDataFormats.get());
+							long countByFormats = countOfferingsByDataFormats.get();
 							// sensor offerings
-							updateLiveTileSensorOfferings(countByProperties);
+							updateLiveTileSensorOfferings(countByFormats);
 							// export 
-							updateLiveTileExport(countByProperties, 
+							updateLiveTileExport(countByFormats, 
 									noSelectedProperties);
 						}
 					});					
@@ -3958,44 +3955,17 @@ public class QuerySetPart implements MapIdentifier {
 	 * @param properties
 	 * @param noMatchingOfferings
 	 */
-	private void updateObservedProperties(final Collection<String> properties) {
+	private void updateObservedProperties(Collection<String> properties) {
 
-		Collection<ObservedProperty> selected = modelObservedProperties
-				.getSelectedObservedProperties();
-
-		System.out.println("Selected: " + selected.size());
-
-		// collect the selected observed properties
-//		final int checked = selected.size();
-
-		// retain model information (state: active/inactive)
-		// Collection<ObservedProperty> checkedOPs = new ArrayList<>();
-		// for (Category cat : modelObservedProperties.getCategories()) {
-		// for (ObservedProperty op : cat.getObservedProperties()) {
-		// if (op.isSelected())
-		// checkedOPs.add(op);
-		// }
-		// }
+		Collection<ObservedProperty> selected = 
+				modelObservedProperties.getSelectedObservedProperties();
 
 		// update the viewer model
 		modelObservedProperties.clearAll();
 		modelObservedProperties.addObservedProperties(properties);
 
-		// modelObservedProperties.setCategories(properties);
-
 		// update model information (state: active/inactive)
 		modelObservedProperties.setSelectedObservedProperties(selected);
-		// for (Category cat : modelObservedProperties.getCategories()) {
-		// for (ObservedProperty op : cat.getObservedProperties()) {
-		// // update model object from retained information (see above)
-		// if (checkedOPs.contains(op))
-		// op.setSelected(true);
-		// // update model object when loading a saved query set
-		// if (activeObservedPropertyURIs.contains(op
-		// .getObservedProperty()))
-		// op.setSelected(true);
-		// }
-		// }
 
 		// reset the active observed properties
 		activeObservedPropertyURIs.clear();
@@ -4004,21 +3974,30 @@ public class QuerySetPart implements MapIdentifier {
 		sync.asyncExec(new Runnable() {
 			@Override
 			public void run() {
-//				if (checked > 0) {
-//					itemClearProperties.setEnabled(true);
-//				} else {
-//					itemClearProperties.setEnabled(false);
-//				}
-
 				treeViewerObservedProperties.refresh();
 				treeViewerObservedProperties.expandAll();
-
-				// update live tile
-				// updateLiveTileObservedProperties(checked,
-				// noMatchingOfferings);
 			}
 		});
 	}
+	
+	/**
+	 * Updates the response formats 
+	 * 
+	 * @param formats
+	 */
+	private void updateResponseFormats(Collection<String> formats) {
+		// update the viewer model
+		modelResponseFormats.clear();
+		modelResponseFormats.addResponseFormats(formats);
+		
+		// update the UI
+		sync.asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				treeViewerResponseFormats.refresh();
+			}
+		});
+	}	
 
 	/**
 	 * 
@@ -4174,61 +4153,61 @@ public class QuerySetPart implements MapIdentifier {
 		comboObservedProperties.redraw();
 	}
 
-	/**
-	 * Updates tile info
-	 * 
-	 * @param count
-	 */
-	public void updateFormats(Collection<String> formats, final int count) {
-
-		// update the viewer model
-		availableFormatsHolder.setAvailableFormats(formats);
-
-		UIUtil.update(new Runnable() {
-			@Override
-			public void run() {
-
-				tableViewerUnsupportedFormats.refresh();
-
-				// update live tile
-				updateLiveTileFormats(getActiveFormatRestriction(), count);
-			}
-		});
-	}
+//	/**
+//	 * Updates tile info
+//	 * 
+//	 * @param count
+//	 */
+//	public void updateFormats(Collection<String> formats, final int count) {
+//
+//		// update the viewer model
+//		availableFormatsHolder.setDataFormats(formats);
+//
+//		UIUtil.update(new Runnable() {
+//			@Override
+//			public void run() {
+//
+//				tableViewerAvailableFormats.refresh();
+//
+//				// update live tile
+//				updateLiveTileFormats(getActiveFormatRestriction(), count);
+//			}
+//		});
+//	}
 
 	/**
 	 * Returns the map layers that are part of this query set
 	 * 
 	 * @return
 	 */
-	public Collection<IMapLayer> getMapLayers() {
-		Collection<IMapLayer> maps = new ArrayList<IMapLayer>();
-		// add the sensor offering layer
-		maps.add(offeringLayer);
-		// add all other maps
-		maps.addAll(getSavedMaps());
-		return maps;
-	}
-
-	/**
-	 * Returns map IDs associated with this query set
-	 * 
-	 * Implements the {@link MapIdentifier} interface
-	 */
-	@Override
-	public MapId getMapId() {
-		return offeringLayer.getMapId();
-	}
-
-	/**
-	 * Sets the map IDs
-	 * 
-	 * Implements the {@link MapIdentifier} interface
-	 */
-	@Override
-	public void setMapId(MapId mapId) {
-		offeringLayer.setMapId(mapId);
-	}
+//	public Collection<IMapLayer> getMapLayers() {
+//		Collection<IMapLayer> maps = new ArrayList<IMapLayer>();
+//		// add the sensor offering layer
+//		maps.add(offeringLayer);
+//		// add all other maps
+//		maps.addAll(getSavedMaps());
+//		return maps;
+//	}
+//
+//	/**
+//	 * Returns map IDs associated with this query set
+//	 * 
+//	 * Implements the {@link MapIdentifier} interface
+//	 */
+//	@Override
+//	public MapId getMapId() {
+//		return offeringLayer.getMapId();
+//	}
+//
+//	/**
+//	 * Sets the map IDs
+//	 * 
+//	 * Implements the {@link MapIdentifier} interface
+//	 */
+//	@Override
+//	public void setMapId(MapId mapId) {
+//		offeringLayer.setMapId(mapId);
+//	}
 
 	/**
 	 * Returns the services associated with this query set 
@@ -4385,7 +4364,7 @@ public class QuerySetPart implements MapIdentifier {
 		text += "\n\n";
 
 		if (noMatches <= 0) {
-			text += "No matched sensor offerings";
+			text += "No matching sensor offerings";
 			warning = true;
 		} else if (noMatches == 1)
 			text += "One matching sensor offering";
@@ -4425,7 +4404,7 @@ public class QuerySetPart implements MapIdentifier {
 		if (count < 0) {
 			text += "All sensor offerings matching";
 		} else if (count == 0) {
-			text += "No matched sensor offerings";
+			text += "No matching sensor offerings";
 			warning = true;
 		} else if (count == 1) {
 			text += "One matching sensor offering";
@@ -4444,24 +4423,25 @@ public class QuerySetPart implements MapIdentifier {
 	 * 
 	 * @param timeFacet
 	 */
-	private void updateLiveTileFormats(FormatFacet formatFacet, int count) {
+	private void updateLiveTileFormats(int noFormats, long count) {
 
 		String text = "";
 		boolean warning = false;
 
-		switch (formatFacet) {
-		case ALL:
+		if (noFormats > 0) {
+			if (noFormats == 1) {
+				text += "One format selected";
+			} else {
+				text += noFormats + " formats selected";
+			}
+		} else {
 			text += "No restriction";
-			break;
-		case SUPPORTED:
-			text += "Only supported formats";
-			break;
 		}
 
 		text += "\n\n";
 
 		if (count == 0) {
-			text += "No matched sensor offerings";
+			text += "No matching sensor offerings";
 			warning = true;
 		} else if (count == 1) {
 			text += "One matching sensor offering";
@@ -4496,7 +4476,7 @@ public class QuerySetPart implements MapIdentifier {
 		text += "\n\n";
 
 		if (count == 0) {
-			text += "No matched sensor offerings";
+			text += "No matching sensor offerings";
 			warning = true;
 		} else if (count == 1) {
 			text += "One matching sensor offering";
@@ -4771,26 +4751,6 @@ public class QuerySetPart implements MapIdentifier {
 		}
 	}
 
-	/**
-	 * Handles the toggling of buttons when selecting a format facet
-	 * 
-	 * @param widget
-	 *            Button just clicked
-	 */
-	private void updateFormatButtonSelection(Widget widget) {
-		if (widget instanceof Control) {
-			Control control = (Control) widget;
-			for (Control child : control.getParent().getChildren()) {
-				if (child instanceof Button
-						&& (child.getStyle() & SWT.TOGGLE) != 0) {
-					((Button) child).setSelection(false);
-				}
-			}
-			if (widget instanceof Button) {
-				((Button) widget).setSelection(true);
-			}
-		}
-	}
 
 	/**
 	 * Notify about time facet change

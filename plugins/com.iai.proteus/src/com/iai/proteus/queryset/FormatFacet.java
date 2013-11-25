@@ -5,6 +5,12 @@
  */
 package com.iai.proteus.queryset;
 
+/**
+ * Defines the available facet values for format selection 
+ * 
+ * @author Jakob Henriksson
+ *
+ */
 public enum FormatFacet {
 
 	ALL("No restriction"),

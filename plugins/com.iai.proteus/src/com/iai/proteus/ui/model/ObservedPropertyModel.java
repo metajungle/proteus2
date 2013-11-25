@@ -17,7 +17,7 @@ import com.iai.proteus.queryset.Category;
 /**
  * Model for observed properties UI viewers  
  * 
- * @author b0kaj
+ * @author Jakob Henriksson 
  *
  */
 public class ObservedPropertyModel {

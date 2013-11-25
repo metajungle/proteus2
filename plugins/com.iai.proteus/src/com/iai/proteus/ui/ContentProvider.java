@@ -10,15 +10,15 @@ import java.util.Collection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 
-import com.iai.proteus.queryset.AvailableFormatsHolder;
 import com.iai.proteus.queryset.Category;
+import com.iai.proteus.ui.model.ResponseFormatsModel;
 import com.iai.proteus.ui.model.ObservedPropertyModel;
 import com.iai.proteus.ui.model.SensorOfferingModel;
 
 /**
  * Content provider for UI viewers  
  * 
- * @author b0kaj
+ * @author Jakob Henriksson 
  *
  */
 public class ContentProvider implements ITreeContentProvider {
@@ -46,8 +46,8 @@ public class ContentProvider implements ITreeContentProvider {
 			return category.getObservedProperties().toArray();
 		}
 		// formats
-		else if (parent instanceof AvailableFormatsHolder) {
-			return ((AvailableFormatsHolder) parent).getAvailableFormats().toArray();
+		else if (parent instanceof ResponseFormatsModel) {
+			return ((ResponseFormatsModel) parent).getResponseFormats().toArray();
 		}
 
         return EMPTY_ARRAY;
