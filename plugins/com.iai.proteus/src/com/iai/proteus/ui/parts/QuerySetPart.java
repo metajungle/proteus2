@@ -3078,42 +3078,14 @@ public class QuerySetPart {
 			}
 		}
 
-		// TODO: update all the available facet data, including data formats
-		
 		// update the available observed properties
 		updateObservedProperties(properties);
-		
-		System.out.println("Formats: " + formats.size());
 		
 		// update the available response formats
 		updateResponseFormats(formats);
 
 		// update the offerings
 		updateOfferings();
-
-		// // update offerings
-		// observedPropertiesHolder.setCategories(properties);
-		//
-		// treeViewerObservedProperties.refresh(true);
-
-		// update model
-		// updateQuerySetModel(getServices());
-
-		// TODO: update the offerings that should be displayed
-		// TODO: notify the geo-browser of changes in what should be displayed
-
-		// active services might have changed - send event
-		// eventAdminService.sendEvent(new
-		// Event(EventTopic.QS_TOGGLE_SERVICES.toString(),
-		// new HashMap<String, Object>() {
-		// {
-		// put("object", getMapId());
-		// put("value", getServices());
-		// }
-		// }));
-
-		// update live services tile
-		// updateLiveTileServices(countActiveServices);
 	}
 
 	/**
