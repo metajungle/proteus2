@@ -10,6 +10,7 @@ import gov.nasa.worldwind.geom.Sector;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -118,6 +119,7 @@ import org.eclipse.wb.swt.old.SWTResourceManager;
 import org.joda.time.Period;
 
 import com.iai.proteus.common.Labeling;
+import com.iai.proteus.common.TimeUtils;
 import com.iai.proteus.common.sos.data.Field;
 import com.iai.proteus.common.sos.model.SensorOffering;
 import com.iai.proteus.common.sos.model.SosCapabilities;
@@ -728,7 +730,8 @@ public class QuerySetPart {
 		liveTime = createLiveTile(tileTime);
 		// set and update the live tile text
 		liveTime.setText("");
-		updateLiveTileTime(TimeFacet.ALL, 0);
+		setActiveTimePeriod(TimeFacet.ALL);
+		updateLiveTileTime(0L);
 		
 		/*
 		 * FORMATS
@@ -844,7 +847,7 @@ public class QuerySetPart {
 						shell, modelServices, ServiceType.SOS);
 				if (dialog.open() == IDialogConstants.OK_ID) {
 					// update model
-					updateSelectedServices();
+					updateSelectedServices(false);
 					// refresh viewer as input might have changed
 					tableViewerSosServices.refresh();
 					// mark as dirty
@@ -855,61 +858,59 @@ public class QuerySetPart {
 				dialog.close();
 			}
 		});
+		
+		final ToolItem itemServicesRefresh = 
+				new ToolItem(toolBarServices, SWT.NONE);
+		itemServicesRefresh.setImage(imgRefresh);
+		// default
+		itemServicesRefresh.setEnabled(false);
+		// listener
+		itemServicesRefresh.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				// update services 
+				updateSelectedServices(true);
+			}
+		});
 
 		final ToolItem itemServiceRemove = new ToolItem(toolBarServices,
 				SWT.NONE);
-		// itemServiceRemove.setText("Remove");
 		itemServiceRemove.setImage(imgDelete);
 		// default
 		itemServiceRemove.setEnabled(false);
 		// manage services listener
 		itemServiceRemove.addSelectionListener(new SelectionAdapter() {
-			@SuppressWarnings("serial")
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				// Collection<Service> servicesToRemove = new
-				// ArrayList<Service>();
-				// // get services to be deleted
-				// Collection<?> selected =
-				// SwtUtil.getSelection(tableViewerSosServices);
-				// for (Object o : selected) {
-				// // just make sure we are dealing with the right type
-				// if (o instanceof Service) {
-				// Service service = (Service) o;
-				// // important: update the model status,
-				// // deactivate the service
-				// service.deactivate();
-				// // add the service to be removed
-				// servicesToRemove.add(service);
-				// }
-				// }
-				//
-				// // send event
-				// eventAdminService.sendEvent(new
-				// Event(EventTopic.QS_TOGGLE_SERVICES.toString(),
-				// new HashMap<String, Object>() {
-				// {
-				// put("object", getMapId());
-				// put("value", getServices());
-				// }
-				// }));
-				//
-				// // remove the services from the model
-				// getServices().removeAll(servicesToRemove);
-				// // count active services
-				// int countActiveServices = 0;
-				// for (Service service : getServices())
-				// countActiveServices += service.isActive() ? 1 : 0;
-				// // update live services tile
-				// updateLiveTileServices(countActiveServices);
-				//
-				// // refresh viewer as input might have changed
-				// tableViewerSosServices.refresh();
+				
+				Collection<Service> servicesToRemove = new ArrayList<>();
+				// get services to be deleted
+				Collection<?> selected = 
+						SwtUtil.getSelection(tableViewerSosServices);
+				for (Object o : selected) {
+					// just make sure we are dealing with the right type
+					if (o instanceof Service) {
+						servicesToRemove.add((Service) o);
+					}
+				}
+				if (servicesToRemove.size() > 0) {
+					// remove the services from the model
+					getServices().removeAll(servicesToRemove);
+					// update services and sensor offerings 
+					updateSelectedServices(false);
+					// update UI 
+					tableViewerSosServices.refresh();
+					
+					if (getServices().size() <= 0) {
+						itemServicesRefresh.setEnabled(false);
+					}
+				}
 			}
 		});
+		
 
-		final ToolItem itemServiceColor = new ToolItem(toolBarServices,
-				SWT.NONE);
+		final ToolItem itemServiceColor = 
+				new ToolItem(toolBarServices, SWT.NONE);
 		itemServiceColor.setImage(imgColor);
 		// default
 		itemServiceColor.setEnabled(false);
@@ -969,6 +970,18 @@ public class QuerySetPart {
 		tableServices.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		tableServices.setHeaderVisible(true);
 		tableServices.setLinesVisible(false);
+		
+		// listener to update tool bar items 
+		tableViewerSosServices.addCheckStateListener(new ICheckStateListener() {
+			@Override
+			public void checkStateChanged(CheckStateChangedEvent event) {
+				if (tableViewerSosServices.getCheckedElements().length > 0) {
+					itemServicesRefresh.setEnabled(true);
+				} else {
+					itemServicesRefresh.setEnabled(false);
+				}
+			}
+		});
 
 		// listener to update tool bar items
 		tableViewerSosServices
@@ -1326,20 +1339,20 @@ public class QuerySetPart {
 
 		Label lblTimeExplanation = new Label(stackTime, SWT.WRAP);
 		lblTimeExplanation
-				.setText("Only include offerings that provide sensor data during a certain period");
+				.setText("Only include sensor offerings that have data for a certain time period");
 		lblTimeExplanation.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true,
 				false, 1, 1));
 
 		Composite compositeTimeButtons = new Composite(stackTime, SWT.NONE);
 		compositeTimeButtons.setLayout(new GridLayout(1, true));
 		compositeTimeButtons.setLayoutData(new GridData(SWT.FILL, SWT.FILL,
-				true, true, 1, 1));
+				true, true));
 
 		final Button btnTimeNoRestriction = new Button(compositeTimeButtons,
 				SWT.TOGGLE);
 		btnTimeNoRestriction.setText(TimeFacet.ALL.toString());
 		btnTimeNoRestriction.setLayoutData(new GridData(SWT.FILL, SWT.NONE,
-				true, false, 1, 1));
+				true, false));
 
 		btnTimeNoRestriction.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -1354,8 +1367,7 @@ public class QuerySetPart {
 
 		final Button btnTime24h = new Button(compositeTimeButtons, SWT.TOGGLE);
 		btnTime24h.setText(TimeFacet.ONEDAY.toString());
-		btnTime24h.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false,
-				1, 1));
+		btnTime24h.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
 
 		btnTime24h.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -1369,7 +1381,7 @@ public class QuerySetPart {
 				SWT.TOGGLE);
 		btnTimeOneWeek.setText(TimeFacet.ONEWEEK.toString());
 		btnTimeOneWeek.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true,
-				false, 1, 1));
+				false));
 
 		btnTimeOneWeek.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -1379,34 +1391,18 @@ public class QuerySetPart {
 			}
 		});
 
-		final Button btnTimeCustom = new Button(compositeTimeButtons,
-				SWT.TOGGLE);
-		btnTimeCustom.setText("Custom...");
-		btnTimeCustom.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true,
-				false, 1, 1));
-
-		btnTimeCustom.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				updateTimeButtonSelection(e.widget);
-
-				// UIUtil.showInfoMessage("To implement...");
-			}
-		});
-
-		btnTimeCustom.setEnabled(false);
-
-		// DateTime calendarStart = new DateTime (compositeTimeButtons,
-		// SWT.CALENDAR | SWT.BORDER);
-		// calendarStart.setLayoutData(new GridData(SWT.CENTER, SWT.NONE, true,
-		// false));
-		// calendarStart.setEnabled(false);
-		//
-		// DateTime calendarEnd = new DateTime (compositeTimeButtons,
-		// SWT.CALENDAR);
-		// calendarEnd.setLayoutData(new GridData(SWT.CENTER, SWT.NONE, true,
-		// false));
-		// calendarEnd.setEnabled(true);
+//		final Button btnTimeCustom = new Button(compositeTimeButtons,
+//				SWT.TOGGLE);
+//		btnTimeCustom.setText("Custom...");
+//		btnTimeCustom.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true,
+//				false, 1, 1));
+//
+//		btnTimeCustom.addSelectionListener(new SelectionAdapter() {
+//			@Override
+//			public void widgetSelected(SelectionEvent e) {
+//				updateTimeButtonSelection(e.widget);
+//			}
+//		});
 
 		/*
 		 * STACK: formats
@@ -1529,9 +1525,7 @@ public class QuerySetPart {
 		Label lblPreview = new Label(stackPreview, SWT.NONE);
 		lblPreview.setFont(SWTResourceManager.getFont("Lucida Grande", 14,
 				SWT.BOLD));
-		lblPreview.setText("Preview");
-
-		new Label(stackPreview, SWT.NONE).setText("Sensor offerings");
+		lblPreview.setText("Sensor offerings");
 
 		tableViewerSensorOfferings = new TableViewer(stackPreview);
 
@@ -1572,25 +1566,10 @@ public class QuerySetPart {
 									// send event to map that selection was updated
 									eventBroker.post(EventConstants.EVENT_GEO_SELECTION_UPDATED, 
 											offering);
-									
-									/*
-									 * Update the options for selecting observed
-									 * properties
-									 */
-									// TODO: implement 
-//									updateObservedPropertiesSelection(item
-//											.getSensorOffering());
-
 								}
 							} else {
-
-								/*
-								 * Clear observed properties
-								 */
-								// TODO: implement 
-//								updateObservedPropertiesSelection(null);
-
-								// TODO: implement: send event to map to clear highlighting
+								// clear selection
+								eventBroker.post(EventConstants.EVENT_GEO_SELECTION_UPDATED, "");
 							}
 						}
 					}
@@ -3024,7 +3003,7 @@ public class QuerySetPart {
 				}
 
 				// updates the selected services
-				updateSelectedServices();
+				updateSelectedServices(false);
 
 				// mark as dirty
 				setDirty(true);
@@ -3056,36 +3035,106 @@ public class QuerySetPart {
 	 * Updates the selected services
 	 * 
 	 */
-	public void updateSelectedServices() {
-
-		Collection<String> properties = new HashSet<>();
-		Collection<String> formats = new HashSet<>();
-
-		// count the active services
-		for (Service service : getServices()) {
-			if (service.isActive()) {
-				// TODO: encapsulate in Job (since we might use network)
-				// get the capabilities (will be taken from cache if possible)
-				SosCapabilities capabilities = 
-						SosUtil.getCapabilities(service.getEndpoint());
-				Collection<SensorOffering> offerings = 
-						capabilities.getOfferings();
-				
-				for (SensorOffering offering : offerings) {
-					properties.addAll(offering.getObservedProperties());
-					formats.addAll(offering.getResponseFormats());
-				}
-			}
-		}
-
-		// update the available observed properties
-		updateObservedProperties(properties);
+	public void updateSelectedServices(final boolean refresh) {
 		
-		// update the available response formats
-		updateResponseFormats(formats);
+		Job job = new Job("Updating services") {
 
-		// update the offerings
-		updateOfferings();
+			@Override
+			protected IStatus run(IProgressMonitor monitor) {
+
+				try {
+
+					monitor.beginTask("Updating services", 
+							getServices().size());
+					
+					Collection<String> properties = new HashSet<>();
+					Collection<String> formats = new HashSet<>();
+
+					// count the active services
+					for (Service service : getServices()) {
+						if (service.isActive()) {
+							// TODO: encapsulate in Job (since we might use network)
+							// get the capabilities (will be taken from cache if possible)
+							SosCapabilities capabilities = 
+									SosUtil.getCapabilities(service.getEndpoint(), refresh);
+							Collection<SensorOffering> offerings = 
+									capabilities.getOfferings();
+							
+							for (SensorOffering offering : offerings) {
+								properties.addAll(offering.getObservedProperties());
+								formats.addAll(offering.getResponseFormats());
+							}
+						}
+						
+						monitor.worked(1);
+					}
+
+					// update the available observed properties
+					updateObservedProperties(properties);
+					
+					// update the available response formats
+					updateResponseFormats(formats);
+
+					// update the offerings
+					updateOfferings();					
+
+				} finally {
+					monitor.done();
+				}
+
+				return org.eclipse.core.runtime.Status.OK_STATUS;
+			}
+		};
+					
+		// TODO: we should be able to set this more generally, 
+		//       either after @PostConstruct or in LifeCycleManager
+		// setting the progress monitor
+		IJobManager manager = Job.getJobManager();
+		MToolControl element = 
+				(MToolControl) 
+					service.find("com.iai.proteus.toolcontrol.jobstatus",
+							application);
+
+		Object widget = element.getObject();
+		final IProgressMonitor p = (IProgressMonitor) widget;
+		ProgressProvider provider = new ProgressProvider() {
+			@Override
+			public IProgressMonitor createMonitor(Job job) {
+				return p;
+			}
+		};
+		manager.setProgressProvider(provider);		
+
+		job.schedule();			
+
+//		Collection<String> properties = new HashSet<>();
+//		Collection<String> formats = new HashSet<>();
+//
+//		// count the active services
+//		for (Service service : getServices()) {
+//			if (service.isActive()) {
+//				// TODO: encapsulate in Job (since we might use network)
+//				// get the capabilities (will be taken from cache if possible)
+//				SosCapabilities capabilities = 
+//						SosUtil.getCapabilities(service.getEndpoint(), refresh);
+//				Collection<SensorOffering> offerings = 
+//						capabilities.getOfferings();
+//				
+//				for (SensorOffering offering : offerings) {
+//					properties.addAll(offering.getObservedProperties());
+//					formats.addAll(offering.getResponseFormats());
+//				}
+//			}
+//		}
+//
+//		// update the available observed properties
+//		updateObservedProperties(properties);
+//		
+//		// update the available response formats
+//		updateResponseFormats(formats);
+//
+//		// update the offerings
+//		updateOfferings();
 	}
 
 	/**
@@ -3119,6 +3168,7 @@ public class QuerySetPart {
 							new AtomicLong();
 					final AtomicLong countOfferingsByObservedProperties = 
 							new AtomicLong();
+					final AtomicLong countOfferingsByTime = new AtomicLong();
 					final AtomicLong countOfferingsByDataFormats = 
 							new AtomicLong();
 
@@ -3178,7 +3228,26 @@ public class QuerySetPart {
 								
 								countOfferingsByObservedProperties.addAndGet(1L);
 								
-								// TODO: filter by time
+								// filter by time
+								Date start = offering.getStartTime();
+								Date end = offering.getEndTime();
+
+								switch (getActiveTimePeriod()) {
+								case ALL:
+									break;
+								case ONEDAY:
+									if (!TimeUtils.includesLastDay(start, end)) {
+										continue;
+									}
+									break;
+								case ONEWEEK:
+									if (!TimeUtils.includesLastWeek(start, end)) {
+										continue; 
+									}
+									break;
+								}
+								
+								countOfferingsByTime.addAndGet(1L);
 								
 								// filter by result format
 								selected = modelResponseFormats.getSelectedResponseFormats().size();
@@ -3223,7 +3292,8 @@ public class QuerySetPart {
 							// observed properties
 							updateLiveTileObservedProperties(noSelectedProperties, 
 									countByProperties);
-							// TODO: update time tile
+							// time
+							updateLiveTileTime(countOfferingsByTime.get());
 							// data formats 
 							updateLiveTileFormats(noSelectedFormats, 
 									countOfferingsByDataFormats.get());
@@ -4027,15 +4097,15 @@ public class QuerySetPart {
 	 * 
 	 * @param count
 	 */
-	public void updateTime(final int count) {
-		UIUtil.update(new Runnable() {
-			@Override
-			public void run() {
-				// update live tile
-				updateLiveTileTime(getActiveTimePeriod(), count);
-			}
-		});
-	}
+//	public void updateTime(final int count) {
+//		UIUtil.update(new Runnable() {
+//			@Override
+//			public void run() {
+//				// update live tile
+//				updateLiveTileTime(getActiveTimePeriod(), count);
+//			}
+//		});
+//	}
 
 	/**
 	 * Updates the sensor offerings for this query set
@@ -4352,14 +4422,14 @@ public class QuerySetPart {
 	/**
 	 * Update live tile
 	 * 
-	 * @param timeFacet
+	 * @param count
 	 */
-	private void updateLiveTileTime(TimeFacet timeFacet, int count) {
+	private void updateLiveTileTime(long count) {
 
 		String text = "";
 		boolean warning = false;
 
-		switch (timeFacet) {
+		switch (getActiveTimePeriod()) {
 		case ALL:
 			text += "No restriction";
 			break;
@@ -4711,12 +4781,14 @@ public class QuerySetPart {
 	private void updateTimeButtonSelection(Widget widget) {
 		if (widget instanceof Control) {
 			Control control = (Control) widget;
+			// de-select all related push buttons 
 			for (Control child : control.getParent().getChildren()) {
 				if (child instanceof Button
 						&& (child.getStyle() & SWT.TOGGLE) != 0) {
 					((Button) child).setSelection(false);
 				}
 			}
+			// select the one that was pressed 
 			if (widget instanceof Button) {
 				((Button) widget).setSelection(true);
 			}
@@ -4729,79 +4801,13 @@ public class QuerySetPart {
 	 * 
 	 * @param timeFacet
 	 */
-	@SuppressWarnings("serial")
 	private void updateTimeRestriction(TimeFacet timeFacet) {
 
 		// save the currently specified time period type
 		setActiveTimePeriod(timeFacet);
-
-		// update live time tile
-		// updateLiveTileTime(timeFacet);
-
-		final FacetChangeToggle change = new FacetChangeToggle(
-				Facet.TIME_PERIOD, true, timeFacet.toString());
-
-		// eventAdminService.sendEvent(new
-		// Event(EventTopic.QS_FACET_CHANGED.toString(),
-		// new HashMap<String, Object>() {
-		// {
-		// put("object", getMapId());
-		// put("value", change);
-		// }
-		// }));
-	}
-
-	/**
-	 * Notify about format facet change
-	 * 
-	 * @param formatFacet
-	 */
-	@SuppressWarnings("serial")
-	private void updateFormatRestriction(FormatFacet formatFacet) {
-
-		// // save the currently specified format restriction
-		// setActiveFormatRestriction(formatFacet);
-		//
-		// switch (formatFacet) {
-		// case ALL:
-		//
-		// // clear response FORMAT facets
-		// // eventAdminService.sendEvent(new
-		// Event(EventTopic.QS_FACET_CLEARED.toString(),
-		// // new HashMap<String, Object>() {
-		// // {
-		// // put("object", getMapId());
-		// // put("value", Facet.RESPONSE_FORMAT);
-		// // }
-		// // }));
-		//
-		// break;
-		//
-		// case SUPPORTED:
-		//
-		// // construct list of supported facets
-		// final java.util.List<FacetChangeToggle> changes =
-		// new ArrayList<FacetChangeToggle>();
-		//
-		// for (SupportedResponseFormats format :
-		// SupportedResponseFormats.values()) {
-		// FacetChangeToggle change =
-		// new FacetChangeToggle(Facet.RESPONSE_FORMAT, true,
-		// format.toString());
-		// changes.add(change);
-		// }
-		//
-		// eventAdminService.sendEvent(new
-		// Event(EventTopic.QS_FACET_CHANGED.toString(),
-		// new HashMap<String, Object>() {
-		// {
-		// put("object", getMapId());
-		// put("value", changes);
-		// }
-		// }));
-		//
-		// break;
-		// }
+		
+		// update offerings
+		updateOfferings();
 	}
 
 	/**
@@ -4911,24 +4917,6 @@ public class QuerySetPart {
 	 */
 	private TimeFacet getActiveTimePeriod() {
 		return activeTimeFacet;
-	}
-
-	/**
-	 * Sets the active format restriction
-	 * 
-	 * @param timeFacet
-	 */
-	private void setActiveFormatRestriction(FormatFacet formatFacet) {
-		this.activeFormatFacet = formatFacet;
-	}
-
-	/**
-	 * Returns the active time period
-	 * 
-	 * @return
-	 */
-	private FormatFacet getActiveFormatRestriction() {
-		return activeFormatFacet;
 	}
 
 	/**

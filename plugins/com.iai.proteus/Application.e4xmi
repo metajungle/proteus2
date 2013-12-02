@@ -20,8 +20,10 @@
         <children xsi:type="menu:HandledMenuItem" xmi:id="_de76W0bzEeOuVPJZKUvhmA" label="Open" iconURI="platform:/plugin/com.iai.proteus/icons/sample.gif" command="_de76UEbzEeOuVPJZKUvhmA"/>
         <children xsi:type="menu:HandledMenuItem" xmi:id="_de76XEbzEeOuVPJZKUvhmA" label="Save" iconURI="platform:/plugin/com.iai.proteus/icons/save_edit.gif" command="_de76U0bzEeOuVPJZKUvhmA"/>
         <children xsi:type="menu:HandledMenuItem" xmi:id="_de76XUbzEeOuVPJZKUvhmA" label="Quit" command="_de76TEbzEeOuVPJZKUvhmA"/>
-        <children xsi:type="menu:HandledMenuItem" xmi:id="_EFIakEcNEeOuVPJZKUvhmA" elementId="com.iai.proteus.handledmenuitem.0" label="Alert Perspective" command="_9NsBoEcMEeOuVPJZKUvhmA"/>
+      </children>
+      <children xsi:type="menu:Menu" xmi:id="_opotIFr0EeOqbuFtkzz-0g" elementId="com.iai.proteus.menu.perspective" label="Perspective">
         <children xsi:type="menu:HandledMenuItem" xmi:id="_f2ucwEcOEeOuVPJZKUvhmA" elementId="com.iai.proteus.handledmenuitem.1" label="Discover Perspective" command="_YoX_sEcOEeOuVPJZKUvhmA"/>
+        <children xsi:type="menu:HandledMenuItem" xmi:id="_EFIakEcNEeOuVPJZKUvhmA" elementId="com.iai.proteus.handledmenuitem.0" label="Alert Perspective" command="_9NsBoEcMEeOuVPJZKUvhmA"/>
       </children>
       <children xsi:type="menu:Menu" xmi:id="_de76XkbzEeOuVPJZKUvhmA" label="Help">
         <children xsi:type="menu:HandledMenuItem" xmi:id="_de76X0bzEeOuVPJZKUvhmA" label="About" command="_de76VkbzEeOuVPJZKUvhmA"/>

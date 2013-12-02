@@ -5,15 +5,25 @@
  */
 package com.iai.proteus.queryset;
 
+/**
+ * Valid time facet values  
+ * 
+ * @author Jakob Henriksson
+ *
+ */
 public enum TimeFacet {
 
 	ALL("No restriction"),
-	ONEDAY("24 hours"),
-	ONEWEEK("1 week"),
-	CUSTOM("Custom");
+	ONEDAY("Last 24 hours"),
+	ONEWEEK("Last one week");
 
 	private String time;
 
+	/**
+	 * Constructor 
+	 * 
+	 * @param time
+	 */
 	private TimeFacet(String time) {
 		this.time = time;
 	}
@@ -23,6 +33,12 @@ public enum TimeFacet {
 		return time;
 	}
 
+	/**
+	 * Parses from string value  
+	 * 
+	 * @param value
+	 * @return
+	 */
 	public TimeFacet parse(String value) {
 		for (TimeFacet facet : TimeFacet.values()) {
 			if (facet.toString().equals(value))

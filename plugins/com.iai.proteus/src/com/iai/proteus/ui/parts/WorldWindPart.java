@@ -249,6 +249,22 @@ public class WorldWindPart implements SelectListener, PropertyChangeListener {
 	 */
 	@Inject
 	@Optional
+	private void eventUpdateSelection(
+			@UIEventTopic(EventConstants.EVENT_GEO_SELECTION_UPDATED) String offeringName) {
+
+		if (offeringName != null && offeringName.equals("")) {
+			// clear selection
+			selectionLayer.clearSelection();
+		}
+	}	
+	
+	/**
+	 * Handle updated sensor offering selection 
+	 * 
+	 * @param offering
+	 */
+	@Inject
+	@Optional
 	private void eventFocusOnSelection(
 			@UIEventTopic(EventConstants.EVENT_GEO_SELECTION_FOCUS) SosSensorOffering offering) {
 
@@ -567,7 +583,6 @@ public class WorldWindPart implements SelectListener, PropertyChangeListener {
 				}
 
 				latestUserSelection = oldSector;
-
 			}
 		}
 	}	
@@ -900,44 +915,6 @@ public class WorldWindPart implements SelectListener, PropertyChangeListener {
 		log.warn("Sorry, could not find the requested layer");
 		return null;
 	}
-
-    /**
-     * Returns a collection of renderables from SosOfferingLayers that
-     * are enabled
-     *
-     * @return
-     */
-//    private Collection<Renderable> getSelectedOfferingMarkers() {
-//
-//    	Collection<Renderable> markers =
-//    			new ArrayList<Renderable>();
-//
-////    	if (pickedMarkers.size() > 0) {
-////    		for (SensorOfferingMarker marker : pickedMarkers) {
-////    			markers.add(marker);
-////    		}
-////    		return markers;
-////    	}
-//
-//    	for (Layer layer : getWwd().getModel().getLayers()) {
-//    		if (layer instanceof SosOfferingLayer) {
-//    			SosOfferingLayer sosLayer = (SosOfferingLayer) layer;
-//    			if (sosLayer.isEnabled()) {
-//    				int count = 0;
-//    				for (Renderable renderable : sosLayer.getRenderables()) {
-//    					if (renderable instanceof SensorOfferingMarker) {
-//    						markers.add(renderable);
-//    						count++;
-//    					}
-//    				}
-//    				log.trace("Layer: " +
-//    						sosLayer.getName() + " contributed " +
-//    						count + " markers");
-//    			}
-//    		}
-//    	}
-//    	return markers;
-//    }
 
     /**
      * Toggle visibility of a base layer map
