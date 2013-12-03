@@ -29,7 +29,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 
-import com.iai.proteus.common.sos.model.SosCapabilities;
+import com.iai.proteus.common.model.sos_v1.SosCapabilities;
 import com.iai.proteus.common.sos.util.SosUtil;
 import com.iai.proteus.model.services.Service;
 import com.iai.proteus.model.services.ServiceRoot;

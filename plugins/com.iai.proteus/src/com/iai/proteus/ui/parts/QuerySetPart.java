@@ -120,9 +120,9 @@ import org.joda.time.Period;
 
 import com.iai.proteus.common.Labeling;
 import com.iai.proteus.common.TimeUtils;
+import com.iai.proteus.common.model.sos_v1.SensorOffering;
+import com.iai.proteus.common.model.sos_v1.SosCapabilities;
 import com.iai.proteus.common.sos.data.Field;
-import com.iai.proteus.common.sos.model.SensorOffering;
-import com.iai.proteus.common.sos.model.SosCapabilities;
 import com.iai.proteus.common.sos.util.SosUtil;
 import com.iai.proteus.dialogs.ManageQuerySetServicesDialog;
 import com.iai.proteus.events.EventConstants;

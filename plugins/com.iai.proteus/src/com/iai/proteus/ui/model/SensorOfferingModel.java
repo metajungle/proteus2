@@ -8,7 +8,7 @@ package com.iai.proteus.ui.model;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import com.iai.proteus.common.sos.model.SensorOffering;
+import com.iai.proteus.common.model.sos_v1.SensorOffering;
 import com.iai.proteus.model.services.Service;
 import com.iai.proteus.queryset.SosSensorOffering;
 

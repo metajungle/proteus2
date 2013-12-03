@@ -9,7 +9,7 @@ import gov.nasa.worldwind.render.Renderable;
 
 import java.awt.Color;
 
-import com.iai.proteus.common.sos.model.SensorOffering;
+import com.iai.proteus.common.model.sos_v1.SensorOffering;
 import com.iai.proteus.model.services.Service;
 
 /**

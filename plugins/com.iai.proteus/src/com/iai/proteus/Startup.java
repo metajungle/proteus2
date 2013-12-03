@@ -26,9 +26,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.iai.proteus.common.model.sos_v1.SosCapabilities;
 import com.iai.proteus.common.sos.GetCapabilities;
 import com.iai.proteus.common.sos.SosCapabilitiesCache;
-import com.iai.proteus.common.sos.model.SosCapabilities;
 import com.iai.proteus.model.map.MapLayer;
 import com.iai.proteus.model.services.Service;
 import com.iai.proteus.model.services.ServiceRoot;

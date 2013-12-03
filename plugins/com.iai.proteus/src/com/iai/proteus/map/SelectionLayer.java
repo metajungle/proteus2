@@ -19,7 +19,7 @@ import java.util.Collection;
 
 import org.apache.log4j.Logger;
 
-import com.iai.proteus.common.sos.model.SensorOffering;
+import com.iai.proteus.common.model.sos_v1.SensorOffering;
 import com.iai.proteus.queryset.SosSensorOffering;
 
 
