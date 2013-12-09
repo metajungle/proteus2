@@ -130,6 +130,7 @@ import com.iai.proteus.common.sos.data.SensorData;
 import com.iai.proteus.common.sos.exception.ExceptionReportException;
 import com.iai.proteus.common.sos.util.SosDataRequest;
 import com.iai.proteus.common.sos.util.SosUtil;
+import com.iai.proteus.events.DataPreviewEvent;
 import com.iai.proteus.events.EventConstants;
 import com.iai.proteus.exceptions.ResponseFormatNotSupportedException;
 import com.iai.proteus.map.WorldWindUtils;
@@ -1591,7 +1592,7 @@ public class QuerySetPart {
 						datePreviewUpdateDataVariables(offering);
 						
 						// preview sensor data
-						previewSensorData();
+						plotSensorData();
 
 					} catch (InvocationTargetException e) {
 						Throwable t = e.getCause();
@@ -1651,6 +1652,7 @@ public class QuerySetPart {
 				SWT.FILL, true, true));
 
 		lblObservedProperties = new Label(compositePlotPreviewDetails, SWT.NONE);
+		lblObservedProperties.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		lblObservedProperties.setText(strNoObservedProperties);
 
 		comboObservedProperties = new Combo(compositePlotPreviewDetails,
@@ -1792,7 +1794,7 @@ public class QuerySetPart {
 		btnUpdatePreview.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
-				previewSensorData();
+				plotSensorData();
 			}
 		});
 
@@ -3028,12 +3030,13 @@ public class QuerySetPart {
 							// get the capabilities (will be taken from cache if possible)
 							SosCapabilities capabilities = 
 									SosUtil.getCapabilities(service.getEndpoint(), refresh);
-							Collection<SensorOffering> offerings = 
-									capabilities.getOfferings();
-							
-							for (SensorOffering offering : offerings) {
-								properties.addAll(offering.getObservedProperties());
-								formats.addAll(offering.getResponseFormats());
+							if (capabilities != null) {
+								for (SensorOffering offering : capabilities.getOfferings()) {
+									properties.addAll(offering.getObservedProperties());
+									formats.addAll(offering.getResponseFormats());
+								}
+							} else {
+								log.error("The capabilities document was null");
 							}
 						}
 						
@@ -3534,14 +3537,81 @@ public class QuerySetPart {
 	}
 
 	/**
-	 * Preview the sensor data
+	 * Initiates plotting of sensor data 
+	 * 
+	 */
+	private void plotSensorData() {
+
+		try {
+		
+			// get selected domain variable 
+			final Field domain =
+					new Field(comboPlotTimeSeriesDomain.getText());
+	
+			// get selected range variables 
+			final Collection<Field> rangeVariables = new ArrayList<Field>();
+			for (Object obj : tableViewerRangeVariables.getCheckedElements()) {
+				if (obj instanceof String)
+					rangeVariables.add(new Field((String) obj));
+			}
+	
+			// get observed property
+			String property = comboObservedProperties.getText();
+			final String observedProperty =
+					(String)comboObservedProperties.getData(property);
+	
+			// get the sensor offering that we will query 
+			final SosSensorOffering offeringItem = getSensorOfferingSelection();
+	
+			// validate input 
+			if (offeringItem != null && observedProperty != null && 
+					rangeVariables.size() > 0 &&
+					!domain.getName().equals(""))
+			{
+	
+				Job job = new Job("Updating preview") {
+	
+					@Override
+					protected IStatus run(IProgressMonitor monitor) {
+	
+						try {
+	
+							monitor.beginTask("Updating sensor data preview",
+									IProgressMonitor.UNKNOWN);
+	
+							/*
+							 * Get and plot the data
+							 */
+							plotSensorData(offeringItem, observedProperty,
+									domain, rangeVariables);
+	
+						} finally {
+							monitor.done();
+						}
+	
+						return org.eclipse.core.runtime.Status.OK_STATUS;
+					}
+				};
+				job.setUser(true);
+				job.schedule();
+			}
+			
+		} catch (IllegalArgumentException e) {
+			log.error("Illegal argument exception: " + e.getMessage());
+			UIUtil.showErrorMessage(shell, "An unexpected error occurred");
+		}
+	}
+	
+	
+	/**
+	 * Plots sensor data
 	 * 
 	 * @param offeringItem
 	 * @param observedProperty
 	 * @param domainVariable
 	 * @param rangeVariables
 	 */
-	private void previewData(SosSensorOffering offeringItem,
+	private void plotSensorData(SosSensorOffering offeringItem,
 			String observedProperty, Field domainVariable,
 			Collection<Field> rangeVariables) {
 
@@ -3554,42 +3624,40 @@ public class QuerySetPart {
 						getActivePreviewFetchPeriod(), 
 						dataPreviewSelectionModel);
 
-		 try {
+		try {
 
-			 SosDataRequest dataRequest =
-					 dataFetcher.makeDataRequests(service,
-							 sensorOffering, observedProperty);
+			SosDataRequest dataRequest =
+					dataFetcher.makeDataRequests(service,
+							sensorOffering, observedProperty);
 
-			 SensorData sensorData = 
-					 dataFetcher.executeRequest(dataRequest, 
-							 dataPreviewSelectionModel);
-			 
-			 System.out.println("RES: " + sensorData);
+			SensorData sensorData = 
+					dataFetcher.executeRequest(dataRequest, 
+							dataPreviewSelectionModel);
 
-//			 final DataPreviewEvent dataPreview =
-//					 new DataPreviewEvent(sensorOffering.getGmlId(),
-//							 observedProperty, sensorData,
-//							 domainVariable, rangeVariables);
+			System.out.println("RES: " + sensorData);
 
-			 // notify the data preview view to display the data
-			 // eventAdminService.sendEvent(new
-//			 Event(EventTopic.QS_PREVIEW_PLOT.toString(),
-					 // new HashMap<String, Object>() {
-					 // {
-					 // put("object", this);
-					 // put("value", dataPreview);
-					 // }
-					 // }));
+			DataPreviewEvent event =
+					new DataPreviewEvent(sensorOffering.getGmlId(),
+							observedProperty, sensorData,
+							domainVariable, rangeVariables);
 
-		 } catch (ResponseFormatNotSupportedException e) {
-			 System.err.println("Error: " + e.getMessage());
-		 } catch (SocketTimeoutException e) {
-			 log.warn("Socket timeout: " + e.getMessage());
-			 UIUtil.showInfoMessage(shell, "The connection timed out. " +
-					 "Please try again later.");
-		 } catch (ExceptionReportException e) {
-			 System.err.println("Error: " + e.getMessage());
-		 }
+			// send event 
+			eventBroker.post(EventConstants.EVENT_PLOT_DATA, event);
+
+		} catch (ResponseFormatNotSupportedException e) {
+			System.err.println("Error: " + e.getMessage());
+		} catch (SocketTimeoutException e) {
+			log.warn("Socket timeout: " + e.getMessage());
+			sync.asyncExec(new Runnable() {
+				@Override
+				public void run() {
+					UIUtil.showInfoMessage(shell, "The connection timed out. " +
+							"Please try again later.");
+				}
+			});
+		} catch (ExceptionReportException e) {
+			System.err.println("Error: " + e.getMessage());
+		}
 	}
 
 	/**
@@ -4201,7 +4269,7 @@ public class QuerySetPart {
 					btnFetchPreview.setEnabled(false);
 
 					// automatically update plot
-					previewSensorData();
+					plotSensorData();
 
 				} else {
 
@@ -4269,6 +4337,7 @@ public class QuerySetPart {
 				lblObservedProperties.setText(labels.size()
 						+ " observed " + (labels.size() == 1 ? 
 								"property" : "properties"));
+				lblObservedProperties.redraw();
 				// enable combo box
 				comboObservedProperties.setEnabled(true);
 				// select item - see if we remember a setting 
@@ -4366,62 +4435,6 @@ public class QuerySetPart {
 	 */
 	public Collection<Service> getServices() {
 		return modelServices.getServices();
-	}
-
-	/**
-	 * Executes the steps for previewing sensor data
-	 * 
-	 */
-	private void previewSensorData() {
-
-		final Collection<Field> rangeVariables = new ArrayList<Field>();
-		for (Object obj : tableViewerRangeVariables.getCheckedElements()) {
-			if (obj instanceof String)
-				rangeVariables.add(new Field((String) obj));
-		}
-
-		final Field domain =
-				new Field(comboPlotTimeSeriesDomain.getText());
-
-		final SosSensorOffering offeringItem = getSensorOfferingSelection();
-
-		// validate
-		if (offeringItem != null &&
-				rangeVariables.size() > 0 &&
-				!domain.getName().equals(""))
-		{
-
-			// get observed property
-			String property = comboObservedProperties.getText();
-			final String observedProperty =
-					(String)comboObservedProperties.getData(property);
-
-			Job job = new Job("Updating preview") {
-
-				@Override
-				protected IStatus run(IProgressMonitor monitor) {
-
-					try {
-
-						monitor.beginTask("Updating preview",
-								IProgressMonitor.UNKNOWN);
-
-						/*
-						 * Preview the data
-						 */
-						previewData(offeringItem, observedProperty,
-								domain, rangeVariables);
-
-					} finally {
-						monitor.done();
-					}
-
-					return org.eclipse.core.runtime.Status.OK_STATUS;
-				}
-			};
-			job.setUser(true);
-			job.schedule();
-		}
 	}
 
 	/**

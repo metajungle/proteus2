@@ -21,5 +21,8 @@ public class EventConstants {
 	
 	// sent by query set to map when sensor offerings are changed/updated 
 	public static final String EVENT_GEO_OFFERINGS_UPDATE = "geobrowser/offerings/update";
+	
+	// sent by query set to plot part
+	public static final String EVENT_PLOT_DATA = "plot/data"; 
 
 }

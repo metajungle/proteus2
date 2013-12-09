@@ -12,12 +12,23 @@
 package com.iai.proteus.ui.parts;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
 
 import javax.annotation.PostConstruct;
+import javax.inject.Inject;
 
+import org.apache.log4j.Logger;
+import org.eclipse.e4.core.di.annotations.Optional;
 import org.eclipse.e4.ui.di.Focus;
+import org.eclipse.e4.ui.di.UIEventTopic;
+import org.eclipse.e4.ui.di.UISynchronize;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -30,10 +41,20 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.title.LegendTitle;
+import org.jfree.chart.title.TextTitle;
+import org.jfree.data.time.Minute;
+import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.experimental.chart.swt.ChartComposite;
 import org.jfree.experimental.swt.SWTUtils;
 import org.jfree.ui.HorizontalAlignment;
+
+import com.iai.proteus.common.TimeUtils;
+import com.iai.proteus.common.sos.data.Field;
+import com.iai.proteus.common.sos.data.SensorData;
+import com.iai.proteus.events.DataPreviewEvent;
+import com.iai.proteus.events.EventConstants;
+import com.iai.proteus.ui.UIUtil;
 
 /**
  * Data viewer 
@@ -43,9 +64,23 @@ import org.jfree.ui.HorizontalAlignment;
  */
 public class DataPlotPart {
 	
+	private static final Logger log = Logger.getLogger(DataPlotPart.class);
+	
+	@Inject
+	UISynchronize sync;
+	
 	private JFreeChart chartTimeSeries;
 	private TimeSeriesCollection datasetTimeSeries;
+	
+	private Composite chartComposite; 
 
+	private static String sep = " - ";
+	
+	/*
+	 * Holds the currently plotted data
+	 */
+	private SensorData currentSensorData;
+	
 	
 	/**
 	 * Constructor 
@@ -64,10 +99,24 @@ public class DataPlotPart {
 	public void postConstruct(Composite parent) {
 		parent.setLayout(new GridLayout(1, false));
 
-		Composite chartComposite = createTimeSeriesChart(parent);
+		chartComposite = createTimeSeriesChart(parent);
 
 		chartComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 	}
+	
+	/**
+	 * Handle setting of the bounding box selection 
+	 * 
+	 * @param sector
+	 */
+	@Inject
+	@Optional
+	private void receiveEvent(
+			@UIEventTopic(EventConstants.EVENT_PLOT_DATA) DataPreviewEvent event) {
+		if (event != null) {
+			plot(event);
+		}
+	}	
 
 	/**
 	 * Create a Time Series chart
@@ -131,7 +180,181 @@ public class DataPlotPart {
 		return chartComposite;
 	}
 	
+	/**
+	 * Plot the sensor data available
+	 *
+	 * @param plotData
+	 */
+	private void plot(DataPreviewEvent plotData) {
 
+		currentSensorData = plotData.getSensorData();
+		
+		// provide title or information for plot legend
+		String title = plotData.getOfferingId() + 
+				sep + 
+				plotData.getObservedProperty();
+//				Labeling.labelProperty(plotData.getObservedProperty());
+				
+		plot(currentSensorData, title, 
+				plotData.getDomainVariable(), plotData.getRangeVariasbles());
+	}
+	
+	/**
+	 * Plots a time series
+	 *
+	 * @param sensorData
+	 * @param title 
+	 * @param domainVariable
+	 * @param rangeVariables
+	 */
+	private void plot(SensorData sensorData, final String title, Field domainVariable,
+			Collection<Field> rangeVariables)
+	{
+
+		String description = "";
+
+		// get the time series for the data of this request
+		final List<TimeSeries> timeSeries =
+				generateTimeSeries(sensorData, description, title, domainVariable,
+						rangeVariables);
+
+		clearPlot();
+
+		if (timeSeries.size() > 0) {
+
+			/*
+			 * Update the data underlying the chart
+			 */
+			sync.asyncExec(new Runnable() {
+				public void run() {
+
+					// set title 
+					TextTitle tt = new TextTitle();
+					tt.setFont(new Font("SansSerif", SWT.BOLD, 14));
+					tt.setText(title);
+					chartTimeSeries.setTitle(tt);
+					
+					for (TimeSeries series : timeSeries) {
+						datasetTimeSeries.addSeries(series);
+					}
+					chartTimeSeries.fireChartChanged();
+				}
+			});
+		}
+
+		autoZoom();
+	}
+
+
+	/**
+	 * Generates a time series data set for the given data and variables
+	 * (domain and range)
+	 *
+	 * @param sensorData
+	 * @param description
+	 * @param title
+	 * @param domainVariable
+	 * @param rangeVariables
+	 * @return
+	 */
+	private List<TimeSeries>
+		generateTimeSeries(SensorData sensorData,
+				String description, String title,
+				Field domainVariable, Collection<Field> rangeVariables)
+	{
+
+		if (rangeVariables.size() > 0) {
+
+//			System.out.println("Range variables: " + rangeVariables);
+
+			List<Field> allVariables = new ArrayList<Field>();
+			// domain
+			allVariables.add(domainVariable);
+			// ranges
+			for (Field field : rangeVariables) {
+				allVariables.add(field);
+			}
+
+			/*
+			 * Get data
+			 */
+			List<String[]> data = sensorData.getData(allVariables);
+
+//			System.out.println("DATA ROWS: " + data.size());
+
+			// create as many time series as we have variables
+			TimeSeries[] allSeries = new TimeSeries[rangeVariables.size()];
+			for (int i = 0; i < allSeries.length; i++) {
+				// create label for time series
+				String variable = allVariables.get(i + 1).getName();
+				String label = variable;
+				allSeries[i] = new TimeSeries(label);
+				allSeries[i].setDescription(description + "##" + variable);
+			}
+
+			/*
+			 * Update labels
+			 *
+			 * TODO: what should this be?
+			 */
+//			chartSettings.labelYAxis = "";
+//				Util.readableLocalURL(rangeVariables[0]);
+
+			for (String[] row : data) {
+
+				Date timestamp = TimeUtils.parseDefault(row[0]);
+				if (timestamp != null) {
+
+					// add to each time series in order
+					for (int i = 0; i < allSeries.length; i++) {
+						try {
+							double value = Double.parseDouble(row[i + 1]);
+							allSeries[i].addOrUpdate(new Minute(timestamp), value);
+						} catch (NumberFormatException e) {
+							log.warn("Could not parse '" + row[1] +
+									"' as Double");
+						}
+					}
+				}
+			}
+
+			return Arrays.asList(allSeries);
+
+		} else {
+			log.warn("Could not find appropriate values to plot");
+		}
+
+		// default
+		return null;
+	}	
+
+	/**
+	 * Removes all the series from the chart
+	 *
+	 */
+	private void clearPlot() {
+
+		log.trace("Clearing plot.");
+
+		sync.syncExec(new Runnable() {
+			public void run() {
+				// clear all
+				datasetTimeSeries.removeAllSeries();
+			}
+		});
+	}
+	
+	/**
+	 *
+	 */
+	private void autoZoom() {
+		sync.syncExec(new Runnable() {
+			public void run() {
+				((ChartComposite) chartComposite).restoreAutoBounds();
+			}
+		});
+	}
+	
 	@Focus
 	public void setFocus() {
 		

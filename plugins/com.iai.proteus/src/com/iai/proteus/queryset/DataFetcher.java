@@ -327,7 +327,7 @@ public class DataFetcher implements IRunnableWithProgress {
 				getObservationData(dataRequest.getServiceUrl(), request);
 
 		/*
-		 * Save variables
+		 * Save returned fields/variables
 		 */
 
 		String offeringId = request.getSensorOffering().getGmlId();
