@@ -10,8 +10,12 @@ import java.util.List;
 
 import com.iai.proteus.common.sos.data.Field;
 
-
-
+/**
+ * Maintains a set of variables for a given offering and observed property
+ * 
+ * @author Jakob Henriksson
+ *
+ */
 public class Variables {
 
 	private String sensorOfferingId;
@@ -19,7 +23,7 @@ public class Variables {
 	private List<Field> variables;
 
 	// true if variables have been set, false otherwise
-	private boolean variablesSet;
+	private boolean isSet;
 
 	/**
 	 * Constructor
@@ -31,16 +35,16 @@ public class Variables {
 		this.sensorOfferingId = offeringId;
 		this.observedProperty = property;
 		variables = new ArrayList<Field>();
-		variablesSet = false;
+		isSet = false;
 	}
 
 	public void setVariables(List<Field> variables) {
 		this.variables = variables;
-		variablesSet = true;
+		isSet = true;
 	}
 
-	public boolean variablesSet() {
-		return variablesSet;
+	public boolean isVariablesSet() {
+		return isSet;
 	}
 
 	public List<Field> getVariables() {

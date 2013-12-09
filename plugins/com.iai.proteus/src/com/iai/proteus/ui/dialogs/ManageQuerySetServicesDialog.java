@@ -3,7 +3,7 @@
  * 
  * All Rights Reserved.
  */
-package com.iai.proteus.dialogs;
+package com.iai.proteus.ui.dialogs;
 
 import java.util.ArrayList;
 import java.util.Collection;

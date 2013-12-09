@@ -128,6 +128,7 @@ public class UIUtil {
 	 *
 	 * @param msg
 	 */
+	@Deprecated
 	public static void showErrorMessage(final String msg) {
 		update(new Runnable() {
 			public void run() {
@@ -142,35 +143,57 @@ public class UIUtil {
 			}
 		});
 	}
+	
+	/**
+	 * Shows an error message on the main threat
+	 * 
+	 * @param shell
+	 * @param msg
+	 */
+	public static void showErrorMessage(Shell shell, String msg) {
+		if (msg == null || msg.equals("")) {
+			msg = "Unknown error occurred";
+		}
+		MessageBox messageBox =
+				new MessageBox(shell, SWT.ICON_ERROR | SWT.OK);
+		messageBox.setMessage(msg);
+		messageBox.setText("An error occured");
+		messageBox.open();
+	}
+
+	/**
+	 * Displays an information dialog box
+	 *
+	 * @param shell
+	 * @param msg
+	 */
+	public static void showInfoMessage(Shell shell, String msg) {
+		showInfoMessage(shell, "Information", msg);
+	}
+	
+	/**
+	 * Displays an information dialog box
+	 *
+	 * @param shell
+	 * @param title 
+	 * @param msg
+	 */
+	public static void showInfoMessage(Shell shell, String title, String msg) {
+		MessageDialog.openInformation(shell, title, msg);
+	}	
 
 	/**
 	 * Displays an information dialog box
 	 *
 	 * @param msg
 	 */
-	public static void showInfoMessage(String msg) {
-		showInfoMessage("Information", msg);
-	}
-	
-	/**
-	 * Displays an information dialog box
-	 *
-	 * @param msg
-	 */
+	@Deprecated
 	public static void showInfoMessage(String title, String msg) {
 		Shell shell =
 			PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
 		MessageDialog.openInformation(shell, title, msg);
 	}	
 
-//	/**
-//	 *
-//	 * @return
-//	 */
-//	public static Shell getShell() {
-//		return PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
-//	}
-//
 	/**
 	 * Returns an image from the specified location
 	 *

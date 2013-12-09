@@ -7,6 +7,8 @@ package com.iai.proteus.ui.parts;
 
 import gov.nasa.worldwind.geom.Sector;
 
+import java.lang.reflect.InvocationTargetException;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -43,6 +45,7 @@ import org.eclipse.e4.ui.workbench.modeling.EModelService;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.jface.dialogs.InputDialog;
+import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
@@ -123,9 +126,12 @@ import com.iai.proteus.common.TimeUtils;
 import com.iai.proteus.common.model.sos_v1.SensorOffering;
 import com.iai.proteus.common.model.sos_v1.SosCapabilities;
 import com.iai.proteus.common.sos.data.Field;
+import com.iai.proteus.common.sos.data.SensorData;
+import com.iai.proteus.common.sos.exception.ExceptionReportException;
+import com.iai.proteus.common.sos.util.SosDataRequest;
 import com.iai.proteus.common.sos.util.SosUtil;
-import com.iai.proteus.dialogs.ManageQuerySetServicesDialog;
 import com.iai.proteus.events.EventConstants;
+import com.iai.proteus.exceptions.ResponseFormatNotSupportedException;
 import com.iai.proteus.map.WorldWindUtils;
 import com.iai.proteus.model.map.MapLayer;
 import com.iai.proteus.model.map.WmsMapLayer;
@@ -134,9 +140,11 @@ import com.iai.proteus.model.services.Service;
 import com.iai.proteus.model.services.ServiceManager;
 import com.iai.proteus.model.services.ServiceRoot;
 import com.iai.proteus.model.services.ServiceType;
+import com.iai.proteus.plot.DataPreviewSelectionModel;
+import com.iai.proteus.plot.TimeSeriesUtil;
 import com.iai.proteus.plot.Variables;
-import com.iai.proteus.plot.VariablesHolder;
 import com.iai.proteus.queryset.Category;
+import com.iai.proteus.queryset.DataFetcher;
 import com.iai.proteus.queryset.Facet;
 import com.iai.proteus.queryset.FacetChangeToggle;
 import com.iai.proteus.queryset.FacetDisplayStrategy;
@@ -149,6 +157,7 @@ import com.iai.proteus.ui.ContentProvider;
 import com.iai.proteus.ui.LabelProvider;
 import com.iai.proteus.ui.SwtUtil;
 import com.iai.proteus.ui.UIUtil;
+import com.iai.proteus.ui.dialogs.ManageQuerySetServicesDialog;
 import com.iai.proteus.ui.model.ObservedProperty;
 import com.iai.proteus.ui.model.ObservedPropertyModel;
 import com.iai.proteus.ui.model.ResponseFormat;
@@ -308,7 +317,7 @@ public class QuerySetPart {
 	private Combo comboPlotTimeSeriesDomain;
 	private CheckboxTableViewer tableViewerRangeVariables;
 	// input to the table viewer
-	private List<String> listRangeVariables;
+	private List<String> dataPlotRangeVariablesModel;
 
 	private Button btnClearRegion;
 
@@ -396,6 +405,10 @@ public class QuerySetPart {
 	/*
 	 * Miscellaneous
 	 */
+	
+//	private DataPreviewSelectionModelOld variablesCache;
+	private DataPreviewSelectionModel dataPreviewSelectionModel;
+	
 	private boolean previewTileActive = false;
 
 	private TimeFacet activeTimeFacet;
@@ -503,81 +516,11 @@ public class QuerySetPart {
 
 		this.querySetName = "Untitled";
 
-		// this.setText(querySetName);
-		// setImage(imgDocument);
-
-//		offeringLayer = new SensorOfferingLayer();
-
-		listRangeVariables = new ArrayList<String>();
-
-		// Create tab interface
-		// createTab(parent);
-
-		// highlight the Services section by default
-		// updateTiles();
-
-		// bring the property sheet to the front by default
-		// try {
-		// PlatformUI.getWorkbench().getActiveWorkbenchWindow().
-		// getActivePage().showView(IPageLayout.ID_PROP_SHEET);
-		// } catch (PartInitException exception) {
-		// log.error("Part init exception: " + exception.getMessage());
-		// }
-
-		// activate the default tile, and set the default selection provider
-		// in the process
-		// activateTile(Tile.SERVICES);
-
-		// // get EventAdmin service
-		// BundleContext ctx = Activator.getContext();
-		// ServiceReference<EventAdmin> ref =
-		// ctx.getServiceReference(EventAdmin.class);
-		// eventAdminService = ctx.getService(ref);
-		//
-		// // send event to initialize the layer
-		// eventAdminService.sendEvent(new
-		// Event(EventTopic.QS_LAYERS_INIT.toString(),
-		// new HashMap<String, Object>() {
-		// {
-		// put("object", this);
-		// put("value", getMapId());
-		// }
-		// }));
-
-		// create handler
-		// EventHandler handler = new EventHandler() {
-		// @Override
-		// public void handleEvent(final Event event) {
-		//
-		// // Object obj = event.getProperty("object");
-		// Object value = event.getProperty("value");
-		//
-		// // clear facets
-		// if (match(event, EventTopic.QS_FACET_CLEARED)) {
-		//
-		// if (value instanceof Facet) {
-		// Facet facet = (Facet) value;
-		// if (facet.equals(Facet.OBSERVED_PROPERTY)) {
-		// // remove all remembered observed properties facets
-		// activeFacets.clear();
-		// }
-		// }
-		//
-		// // TODO: refresh observed property viewer?
-		// }
-		// }
-		// };
-
-		// register service
-		// Dictionary<String,String> properties = new Hashtable<String,
-		// String>();
-		// properties.put(EventConstants.EVENT_TOPIC,
-		// EventTopic.TOPIC_QUERYSET.toString());
-		// // listen to query set topics
-		// ctx.registerService(EventHandler.class.getName(), handler,
-		// properties);
+		dataPlotRangeVariablesModel = new ArrayList<>();
+		
+		dataPreviewSelectionModel = new DataPreviewSelectionModel();
 	}
-
+	
 	/**
 	 * Returns true if the event matches the event topic, false otherwise
 	 * 
@@ -1566,10 +1509,14 @@ public class QuerySetPart {
 									// send event to map that selection was updated
 									eventBroker.post(EventConstants.EVENT_GEO_SELECTION_UPDATED, 
 											offering);
+									
+									dataPreviewSensorOfferingChanged(offering.getSensorOffering());
 								}
 							} else {
 								// clear selection
 								eventBroker.post(EventConstants.EVENT_GEO_SELECTION_UPDATED, "");
+								
+								dataPreviewSensorOfferingChanged(null);
 							}
 						}
 					}
@@ -1598,6 +1545,8 @@ public class QuerySetPart {
 		 */
 		compositePreview = new Composite(stackPreview, SWT.NONE);
 		stackLayoutPreview = new StackLayout();
+		stackLayoutPreview.marginHeight = 0;
+		stackLayoutPreview.marginWidth = 0;
 		compositePreview.setLayout(stackLayoutPreview);
 		compositePreview.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true,
 				true));
@@ -1606,7 +1555,10 @@ public class QuerySetPart {
 		 * Preview stack - Preview Button
 		 */
 		compositePlotPreviewRequest = new Composite(compositePreview, SWT.NONE);
-		compositePlotPreviewRequest.setLayout(new GridLayout(1, false));
+		GridLayout gl1 = new GridLayout(1, false);
+		gl1.marginHeight = 0;
+		gl1.marginWidth = 0;
+		compositePlotPreviewRequest.setLayout(gl1);
 		compositePlotPreviewRequest.setLayoutData(new GridData(SWT.FILL,
 				SWT.FILL, true, true));
 
@@ -1620,49 +1572,43 @@ public class QuerySetPart {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
 
-				// SensorOfferingItem offeringItem =
-				// getSensorOfferingSelection();
-				// if (offeringItem != null) {
-				//
-				// /*
-				// * Initiate data preview
-				// */
-				//
-				// try {
-				//
-				// // determine the period to use for previewing data
-				// Period period = getActivePreviewFetchPeriod();
-				//
-				// new ProgressMonitorDialog(site.getShell()).run(true,
-				// true, new DataFetcher(offeringItem, period));
-				//
-				// // update variables
-				// updateAvailableVariables(offeringItem);
-				//
-				// // preview sensor data
-				// previewSensorData();
-				//
-				// } catch (InvocationTargetException e) {
-				// Throwable t = e.getCause();
-				// if (t != null) {
-				// if (t instanceof SocketTimeoutException) {
-				// String msg = "The connection timed out. " +
-				// "Please try again later or change the " +
-				// "timeout preferences.";
-				// UIUtil.showErrorMessage(msg);
-				// } else {
-				// String msg = t.getMessage();
-				// if (msg != null)
-				// UIUtil.showErrorMessage(msg);
-				// else
-				// UIUtil.showErrorMessage("Unknown error occured");
-				// }
-				// }
-				// } catch (InterruptedException e) {
-				// UIUtil.showErrorMessage("The operation was interrupted: " +
-				// e.getMessage());
-				// }
-				// }
+				SosSensorOffering offering =
+						getSensorOfferingSelection();
+				if (offering != null) {
+					// initiate data preview
+					try {
+						// determine the period to use for previewing data
+						Period period = getActivePreviewFetchPeriod();
+						
+						// progress indicator for data download  
+						new ProgressMonitorDialog(shell).run(true,
+								true, 
+								new DataFetcher(shell, 
+										offering, period, 
+										dataPreviewSelectionModel));
+						
+						// update variables
+						datePreviewUpdateDataVariables(offering);
+						
+						// preview sensor data
+						previewSensorData();
+
+					} catch (InvocationTargetException e) {
+						Throwable t = e.getCause();
+						if (t != null) {
+							if (t instanceof SocketTimeoutException) {
+								String msg = "The connection timed out. " +
+										"Please try again later.";
+								UIUtil.showErrorMessage(shell, msg);
+							} else {
+								UIUtil.showErrorMessage(shell, t.getMessage());
+							}
+						}
+					} catch (InterruptedException e) {
+						UIUtil.showErrorMessage(shell, 
+								"The operation was interrupted: " + e.getMessage());
+					}
+				}
 			}
 		});
 
@@ -1710,7 +1656,7 @@ public class QuerySetPart {
 		comboObservedProperties = new Combo(compositePlotPreviewDetails,
 				SWT.READ_ONLY);
 		comboObservedProperties.setLayoutData(new GridData(SWT.FILL,
-				SWT.CENTER, true, false, 1, 1));
+				SWT.CENTER, true, false));
 
 		/*
 		 * Listener for changes in observed property selection
@@ -1718,7 +1664,10 @@ public class QuerySetPart {
 		comboObservedProperties.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
-				prepareForPreview();
+				// remember selection 
+				rememberSelectedObservedProperty();
+				
+				datePreviewUpdateDataVariables(getSensorOfferingSelection());
 			}
 		});
 
@@ -1754,38 +1703,32 @@ public class QuerySetPart {
 		gridData.exclude = true;
 		btnContour.setLayoutData(gridData);
 
-		lbl1 = new Label(compositePlotPreviewDetails, SWT.SEPARATOR
-				| SWT.HORIZONTAL);
-		lbl1.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
+//		lbl1 = new Label(compositePlotPreviewDetails, SWT.SEPARATOR
+//				| SWT.HORIZONTAL);
+//		lbl1.setLayoutData(new GridData(SWT.FILL, SWT.NONE, true, false));
 
-		final Composite plotOptions = new Composite(
-				compositePlotPreviewDetails, SWT.NONE);
-		plotOptions.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true,
-				1, 1));
+		final Composite plotOptions = 
+				new Composite(compositePlotPreviewDetails, SWT.NONE);
+		plotOptions.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		final StackLayout plotOptionsStackLayout = new StackLayout();
 		plotOptions.setLayout(plotOptionsStackLayout);
 
 		/*
 		 * Time series plot options
 		 */
-		final Composite plotTimeSeriesOptions = new Composite(plotOptions,
-				SWT.NONE);
-		plotTimeSeriesOptions.setLayout(new GridLayout(2, false));
+		final Composite plotTimeSeriesOptions = 
+				new Composite(plotOptions, SWT.NONE);
+		plotTimeSeriesOptions.setLayout(new GridLayout(1, false));
+		plotTimeSeriesOptions.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
-		Label lblDomain = new Label(plotTimeSeriesOptions, SWT.NONE);
-		lblDomain.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false,
-				false, 1, 1));
-		lblDomain.setText("Domain");
+		new Label(plotTimeSeriesOptions, SWT.NONE).setText("Domain variable");
 
 		comboPlotTimeSeriesDomain = new Combo(plotTimeSeriesOptions,
 				SWT.READ_ONLY);
 		comboPlotTimeSeriesDomain.setLayoutData(new GridData(SWT.FILL,
-				SWT.CENTER, true, false, 1, 1));
+				SWT.CENTER, true, false));
 
-		Label lblRange = new Label(plotTimeSeriesOptions, SWT.NONE);
-		lblRange.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, false, false, 1,
-				1));
-		lblRange.setText("Range");
+		new Label(plotTimeSeriesOptions, SWT.NONE).setText("Range variables");
 
 		// checkbox table viewer for displaying available range variables
 		tableViewerRangeVariables = CheckboxTableViewer.newCheckList(
@@ -1799,8 +1742,8 @@ public class QuerySetPart {
 				.getInstance());
 		// label provider returns toString() value by default
 		tableViewerRangeVariables.setLabelProvider(labelProvider);
-		tableViewerRangeVariables.setInput(listRangeVariables);
-
+		tableViewerRangeVariables.setInput(dataPlotRangeVariablesModel);
+		
 		/*
 		 * Contour plot options
 		 */
@@ -1863,6 +1806,34 @@ public class QuerySetPart {
 						// the number of checked range variables
 						setUpdatePreviewButtonStatus(tableViewerRangeVariables
 								.getCheckedElements().length > 0);
+						
+						// remember the variable selection 
+						SosSensorOffering offering = 
+								getSensorOfferingSelection();
+						if (offering != null) {
+							String id = offering.getSensorOffering().getGmlId();
+							String value = comboObservedProperties.getText();
+							if (value != null) {
+								String uri = (String)
+										comboObservedProperties.getData(value);
+								if (uri != null) {
+									
+									String field = (String) event.getElement();
+									
+									if (event.getChecked()) {
+										// selected 
+										dataPreviewSelectionModel.fieldSelected(id, 
+												uri, 
+												new Field(field));
+									} else {
+										// de-selected
+										dataPreviewSelectionModel.fieldDeselected(id, 
+												uri, 
+												new Field(field));
+									}
+								}
+							}
+						}
 					}
 				});
 
@@ -3570,7 +3541,6 @@ public class QuerySetPart {
 	 * @param domainVariable
 	 * @param rangeVariables
 	 */
-	@SuppressWarnings("serial")
 	private void previewData(SosSensorOffering offeringItem,
 			String observedProperty, Field domainVariable,
 			Collection<Field> rangeVariables) {
@@ -3579,42 +3549,47 @@ public class QuerySetPart {
 		SensorOffering sensorOffering = offeringItem.getSensorOffering();
 
 		// create the data fetching object
-		// DataFetcher fetcher =
-		// new DataFetcher(offeringItem, getActivePreviewFetchPeriod());
-		//
-		// try {
-		//
-		// SosDataRequest dataRequest =
-		// fetcher.makeDataRequests(service,
-		// sensorOffering, observedProperty);
-		//
-		// SensorData sensorData = fetcher.executeRequest(dataRequest);
-		//
-		// // final DataPreviewEvent dataPreview =
-		// // new DataPreviewEvent(sensorOffering.getGmlId(),
-		// // observedProperty, sensorData,
-		// // domainVariable, rangeVariables);
-		//
-		// // notify the data preview view to display the data
-		// // eventAdminService.sendEvent(new
-		// Event(EventTopic.QS_PREVIEW_PLOT.toString(),
-		// // new HashMap<String, Object>() {
-		// // {
-		// // put("object", this);
-		// // put("value", dataPreview);
-		// // }
-		// // }));
-		//
-		// } catch (ResponseFormatNotSupportedException e) {
-		// System.err.println("Error: " + e.getMessage());
-		// } catch (SocketTimeoutException e) {
-		// log.warn("Socket timeout: " + e.getMessage());
-		// UIUtil.showInfoMessage("The connection timed out. " +
-		// "Please try again later or change timout settings " +
-		// "Preferences.");
-		// } catch (ExceptionReportException e) {
-		// System.err.println("Error: " + e.getMessage());
-		// }
+		DataFetcher dataFetcher =
+				new DataFetcher(shell, offeringItem, 
+						getActivePreviewFetchPeriod(), 
+						dataPreviewSelectionModel);
+
+		 try {
+
+			 SosDataRequest dataRequest =
+					 dataFetcher.makeDataRequests(service,
+							 sensorOffering, observedProperty);
+
+			 SensorData sensorData = 
+					 dataFetcher.executeRequest(dataRequest, 
+							 dataPreviewSelectionModel);
+			 
+			 System.out.println("RES: " + sensorData);
+
+//			 final DataPreviewEvent dataPreview =
+//					 new DataPreviewEvent(sensorOffering.getGmlId(),
+//							 observedProperty, sensorData,
+//							 domainVariable, rangeVariables);
+
+			 // notify the data preview view to display the data
+			 // eventAdminService.sendEvent(new
+//			 Event(EventTopic.QS_PREVIEW_PLOT.toString(),
+					 // new HashMap<String, Object>() {
+					 // {
+					 // put("object", this);
+					 // put("value", dataPreview);
+					 // }
+					 // }));
+
+		 } catch (ResponseFormatNotSupportedException e) {
+			 System.err.println("Error: " + e.getMessage());
+		 } catch (SocketTimeoutException e) {
+			 log.warn("Socket timeout: " + e.getMessage());
+			 UIUtil.showInfoMessage(shell, "The connection timed out. " +
+					 "Please try again later.");
+		 } catch (ExceptionReportException e) {
+			 System.err.println("Error: " + e.getMessage());
+		 }
 	}
 
 	/**
@@ -3624,14 +3599,9 @@ public class QuerySetPart {
 	 */
 	private SosSensorOffering getSensorOfferingSelection() {
 		ISelection selection = tableViewerSensorOfferings.getSelection();
-		if (selection instanceof StructuredSelection) {
-			StructuredSelection structured = (StructuredSelection) selection;
-
-			Object first = structured.getFirstElement();
-
-			if (first instanceof SosSensorOffering) {
-				return ((SosSensorOffering) first);
-			}
+		Object first = SwtUtil.getFirstSelectedElement(selection);
+		if (first instanceof SosSensorOffering) {
+			return ((SosSensorOffering) first);
 		}
 		// default
 		return null;
@@ -3736,130 +3706,92 @@ public class QuerySetPart {
 	public StructuredViewer getActiveSelectionProvider() {
 		return activeSelectionProvider;
 	}
+	
+	/**
+	 * Stores the last selected observed property for a given sensor offering, 
+	 * if possible 
+	 *  
+	 */
+	private void rememberSelectedObservedProperty() {
+		SosSensorOffering offeringItem = getSensorOfferingSelection();
+		if (offeringItem != null) {
+			SensorOffering offering = offeringItem.getSensorOffering();
+			String offeringId = offering.getGmlId();
+			String property = comboObservedProperties.getText();
+			String observedProperty = 
+					(String) comboObservedProperties.getData(property);
+			if (observedProperty != null) {
+				// save selected observed property
+				dataPreviewSelectionModel.setSelectedObservedProperty(offeringId, 
+						observedProperty);
+			}
+		}		
+	}
 
 	/**
 	 * Updates the UI with available variables
 	 * 
 	 * @param offeringItem
 	 */
-	private void updateAvailableVariables(SosSensorOffering offeringItem) {
+//	private void showAndUpdatePlotVariables(SosSensorOffering offeringItem) {
+//
+//		SensorOffering sensorOffering = offeringItem.getSensorOffering();
+//		String offeringId = sensorOffering.getGmlId();
+//
+//		String property = comboObservedProperties.getText();
+//		String observedProperty = 
+//				(String) comboObservedProperties.getData(property);
+//
+//		// clear
+//		comboPlotTimeSeriesDomain.setItems(new String[0]);
+//		comboPlotTimeSeriesDomain.setEnabled(false);
+//		dataPlotRangeVariablesModel.clear();
+//		tableViewerRangeVariables.getTable().setEnabled(false);
+//		
+//		Collection<Field> fields = 
+//				dataPreviewSelectionModel.getFields(offeringId, observedProperty);
+//		
+//		if (fields.size() > 0) {
+//			
+//			// show details for previewing data
+//			showPreviewPlotStack(PlotPreviewStack.DETAILS);
+//
+//			String[] vars = 
+//					DataPreviewSelectionModel.fieldsToStringArray(fields);
+//			
+//			// update domain variables
+//			comboPlotTimeSeriesDomain.setItems(vars);
+//			comboPlotTimeSeriesDomain.setEnabled(true);
+//
+//			// update range variables
+//			dataPlotRangeVariablesModel.addAll(Arrays.asList(vars));
+//			// set enabled status on viewer
+//			tableViewerRangeVariables.getTable().setEnabled(vars.length > 0);
+//
+//			Field[] fieldsArr = fields.toArray(new Field[0]);
+//			
+//			// guess the default domain variable
+//			guessTimeSeriesDomainVarible(fieldsArr);
+//
+//			// guess the default range variable
+//			Field selected = guessTimeSeriesRangeVaribles(fieldsArr);
+//			if (selected != null) {
+//				// NOTE: does not fire check state listeners
+//				tableViewerRangeVariables.setChecked(selected.getName(), true);
+//				// update model 
+//				dataPreviewSelectionModel.fieldSelected(offeringId, 
+//						observedProperty, selected);
+//				// make sure that the preview button is enabled
+//				setUpdatePreviewButtonStatus(true);
+//				// refresh viewer
+//				tableViewerRangeVariables.refresh();
+//			}
+//		}
+//		
+//		// refresh viewers
+//		tableViewerRangeVariables.refresh();
+//	}
 
-		SensorOffering sensorOffering = offeringItem.getSensorOffering();
-		String offeringId = sensorOffering.getGmlId();
-
-		String property = comboObservedProperties.getText();
-		String observedProperty = (String) comboObservedProperties
-				.getData(property);
-
-		Variables variables = VariablesHolder.getInstance().getVariables(
-				offeringId, observedProperty);
-
-		if (variables != null) {
-
-			// show details for previewing data
-			showPreviewPlotStack(PlotPreviewStack.DETAILS);
-
-			String[] vars = variables.getVariableStrings();
-
-			// update domain variables
-			comboPlotTimeSeriesDomain.setItems(variables.getVariableStrings());
-			comboPlotTimeSeriesDomain.setEnabled(true);
-
-			// update range variables
-			listRangeVariables.clear();
-			listRangeVariables.addAll(Arrays.asList(vars));
-			// set enabled status on viewer
-			tableViewerRangeVariables.getTable().setEnabled(vars.length > 0);
-			// refresh viewer
-			tableViewerRangeVariables.refresh();
-
-			// guess the default domain variable
-			guessTimeSeriesDomainVarible(variables);
-
-			// guess the default range variable
-			guessTimeSeriesRangeVaribles(variables);
-
-		}
-	}
-
-	/**
-	 * Prepare for preview
-	 * 
-	 * - See if we have variables to show - If so, update plot information - If
-	 * not, enable the 'prepare preview' button
-	 */
-	private void prepareForPreview() {
-
-		SosSensorOffering offeringItem = getSensorOfferingSelection();
-		if (offeringItem != null) {
-
-			SensorOffering offering = offeringItem.getSensorOffering();
-			String offeringId = offering.getGmlId();
-			String property = comboObservedProperties.getText();
-			String observedProperty = (String) comboObservedProperties
-					.getData(property);
-
-			if (observedProperty != null) {
-				VariablesHolder holder = VariablesHolder.getInstance();
-				Variables variables = holder.getVariables(offeringId,
-						observedProperty);
-
-				/*
-				 * We have variables ready
-				 */
-				if (variables != null) {
-
-					// show plot details
-					showPreviewPlotStack(PlotPreviewStack.DETAILS);
-
-					// create variables
-					comboPlotTimeSeriesDomain.setItems(variables
-							.getVariableStrings());
-					comboPlotTimeSeriesDomain.setEnabled(true);
-
-					// update range variables
-					String[] vars = variables.getVariableStrings();
-					listRangeVariables.clear();
-					listRangeVariables.addAll(Arrays.asList(vars));
-					// set enabled status on viewer
-					tableViewerRangeVariables.getTable().setEnabled(
-							vars.length > 0);
-					// refresh viewer
-					tableViewerRangeVariables.refresh();
-
-					// guess the default domain variable
-					guessTimeSeriesDomainVarible(variables);
-
-					// guess the default domain variable
-					guessTimeSeriesRangeVaribles(variables);
-
-					// disable button
-					btnFetchPreview.setEnabled(false);
-
-					// automatically update plot
-					previewSensorData();
-
-				} else {
-
-					// hide plot details
-					showPreviewPlotStack(PlotPreviewStack.REQUEST);
-
-					// clear variables
-					comboPlotTimeSeriesDomain.removeAll();
-					comboPlotTimeSeriesDomain.setEnabled(false);
-
-					// clear and disable range variable viewer
-					listRangeVariables.clear();
-					// refresh viewer
-					tableViewerRangeVariables.refresh();
-					tableViewerRangeVariables.getTable().setEnabled(false);
-
-					// enable button
-					btnFetchPreview.setEnabled(true);
-				}
-			}
-		}
-	}
 
 	/**
 	 * Available stacks for plot previews
@@ -3869,7 +3801,9 @@ public class QuerySetPart {
 	 */
 	private enum PlotPreviewStack {
 
-		REQUEST, UNSUPPORTED_FORMAT, DETAILS,
+		REQUEST, 
+		UNSUPPORTED_FORMAT, 
+		DETAILS,
 	}
 
 	/**
@@ -3892,22 +3826,56 @@ public class QuerySetPart {
 		// update layout
 		compositePreview.layout();
 	}
+	
+	/**
+	 * Tries to guess the domain variable (x-axis)
+	 * 
+	 * @param fields
+	 */
+	private void guessTimeSeriesDomainVarible(Field[] fields) {
+		// guess the default domain variable
+		int index = -1;
+		for (int i = 0; i < fields.length; i++) {
+			Field field = fields[i];
+			// if the field is marked as a time field, use it
+			if (field.isTimeField()) {
+				index = i;
+				break;
+			}
+			// else, if contains the word 'date' or 'time' 
+			else if (field.toString().contains("date") || 
+					field.toString().contains("time")) 
+			{
+				index = i;
+				break;
+			}
+		}
+		// select it if we can
+		if (index != -1) {
+			comboPlotTimeSeriesDomain.select(index);
+		}
+	}	
 
 	/**
+	 * Tries to guess the domain variable (x-axis)
 	 * 
 	 * @param varibles
 	 */
+	@Deprecated
 	private void guessTimeSeriesDomainVarible(Variables varibles) {
 		// guess the default domain variable
 		int index = -1;
 		int i = 0;
 		for (Field field : varibles.getVariables()) {
+			// if the field is marked as a time field, use it
 			if (field.isTimeField()) {
 				index = i;
 				break;
 			}
-			// TODO: better guessing mechanism
-			else if (field.toString().contains("date")) {
+			// else, if contains the word 'date' or 'time' 
+			else if (field.toString().contains("date") || 
+					field.toString().contains("time")) 
+			{
 				index = i;
 				break;
 			}
@@ -3921,26 +3889,45 @@ public class QuerySetPart {
 	}
 
 	/**
+	 * Tries to guess the range variable (y-axis)
+	 * 
+	 * @param fields
+	 */
+	private Field guessTimeSeriesRangeVaribles(Field[] fields) {
+		// guess the default range variable
+		for (Field field : fields) {
+			if (!TimeSeriesUtil.notRangeCandidate(field)) {
+				// return the first one for now...
+				return field;
+			}
+		}
+		// default
+		return null;
+	}	
+	
+	/**
+	 * Tries to guess the range variable (y-axis)
 	 * 
 	 * @param varibles
 	 */
+	@Deprecated
 	private void guessTimeSeriesRangeVaribles(Variables varibles) {
 
-		// // guess the default range variable
-		// for (Field field : varibles.getVariables()) {
-		// if (!TimeSeriesUtil.notRangeCandidate(field)) {
-		// // select the first one for now...
-		// // NOTE: does not fire check state listeners
-		// tableViewerRangeVariables.setChecked(field.getName(), true);
-		// // make sure that the preview button is enabled
-		// setUpdatePreviewButtonStatus(true);
-		//
-		// // refresh viewer
-		// tableViewerRangeVariables.refresh();
-		// break;
-		// }
-		//
-		// }
+		// guess the default range variable
+		for (Field field : varibles.getVariables()) {
+			if (!TimeSeriesUtil.notRangeCandidate(field)) {
+				// select the first one for now...
+				// NOTE: does not fire check state listeners
+				tableViewerRangeVariables.setChecked(field.getName(), true);
+				// make sure that the preview button is enabled
+				setUpdatePreviewButtonStatus(true);
+
+				// refresh viewer
+				tableViewerRangeVariables.refresh();
+				break;
+			}
+
+		}
 	}
 
 	/**
@@ -3949,10 +3936,7 @@ public class QuerySetPart {
 	 * @param state
 	 */
 	private void setUpdatePreviewButtonStatus(boolean state) {
-		if (tableViewerRangeVariables.getCheckedElements().length > 0)
-			btnUpdatePreview.setEnabled(true);
-		else
-			btnUpdatePreview.setEnabled(false);
+		btnUpdatePreview.setEnabled(state);
 	}
 
 	/**
@@ -4133,51 +4117,175 @@ public class QuerySetPart {
 //			}
 //		});
 //	}
+	
+	/**
+	 * Update the data variables depending on the offering and observed 
+	 * properties selection  
+	 * 
+	 * @param offeringItem 
+	 */
+	private void datePreviewUpdateDataVariables(SosSensorOffering offeringItem) {
+
+		if (offeringItem != null) {
+
+			SensorOffering offering = offeringItem.getSensorOffering();
+			String offeringId = offering.getGmlId();
+						
+			String property = comboObservedProperties.getText();
+			String observedProperty = 
+					(String) comboObservedProperties.getData(property);
+
+			if (observedProperty != null) {
+				
+				Collection<Field> fields = 
+						dataPreviewSelectionModel.getFields(offeringId, 
+								observedProperty);
+				
+				// we have variables already
+				if (fields.size() > 0) {
+
+					// show plot details
+					showPreviewPlotStack(PlotPreviewStack.DETAILS);
+					
+					String[] vars = 
+							DataPreviewSelectionModel.fieldsToStringArray(fields);
+
+					// update domain variables
+					comboPlotTimeSeriesDomain.setItems(vars);
+					comboPlotTimeSeriesDomain.setEnabled(true);
+
+					// update range variables
+					dataPlotRangeVariablesModel.clear();
+					dataPlotRangeVariablesModel.addAll(Arrays.asList(vars));
+					// set enabled status on viewer
+					tableViewerRangeVariables.getTable().setEnabled(
+							vars.length > 0);
+					// refresh viewer
+					tableViewerRangeVariables.refresh();
+
+					Field[] fieldsArr = fields.toArray(new Field[0]);
+					
+					// guess the default domain variable
+					guessTimeSeriesDomainVarible(fieldsArr);
+
+					// check if we have remembered variable selection...
+					Collection<String> checked = new ArrayList<>();
+					for (Field f : fields) {
+						if (f.isSelected()) {
+							checked.add(f.getName());
+						}
+					}
+					if (checked.size() > 0) {
+						tableViewerRangeVariables.setCheckedElements(checked.toArray());
+						// make sure that the preview button is enabled
+						setUpdatePreviewButtonStatus(true);
+						// refresh viewer
+						tableViewerRangeVariables.refresh();
+					} else {
+						// ...otherwise, guess the default range variable
+						Field selected = guessTimeSeriesRangeVaribles(fieldsArr);
+						if (selected != null) {
+							// NOTE: does not fire check state listeners
+							tableViewerRangeVariables.setChecked(selected.getName(), true);
+							// update model 
+							dataPreviewSelectionModel.fieldSelected(offeringId, 
+									observedProperty, selected);
+							// make sure that the preview button is enabled
+							setUpdatePreviewButtonStatus(true);
+							// refresh viewer
+							tableViewerRangeVariables.refresh();
+						}
+					}
+
+					// disable button
+					btnFetchPreview.setEnabled(false);
+
+					// automatically update plot
+					previewSensorData();
+
+				} else {
+
+					// hide plot details
+					showPreviewPlotStack(PlotPreviewStack.REQUEST);
+
+					// clear variables
+					comboPlotTimeSeriesDomain.removeAll();
+					comboPlotTimeSeriesDomain.setEnabled(false);
+
+					// clear and disable range variable viewer
+					dataPlotRangeVariablesModel.clear();
+					// refresh viewer
+					tableViewerRangeVariables.refresh();
+					tableViewerRangeVariables.getTable().setEnabled(false);
+
+					// enable button
+					btnFetchPreview.setEnabled(true);
+				}
+			}
+		}
+	}
+	
 
 	/**
-	 * Updates the possibilities for selecting an observed property
+	 * Handles data preview updates when the selection of sensor offering
+	 * changed 
+	 * 
+	 * This method does among other things:
+	 * 
+	 * - Check if we support ant of the response formats 
+	 * - Update the UI (combo) with the observed properties of the offering
 	 * 
 	 * @param sensorOffering
 	 */
-	private void updateObservedPropertiesSelection(SensorOffering sensorOffering) {
+	private void dataPreviewSensorOfferingChanged(SensorOffering sensorOffering) {
 
 		if (sensorOffering != null) {
 
 			// check for supported formats - if there are no supported formats
 			// display a stack with an error message, and then return
-			if (SosUtil.commonResponseFormats(sensorOffering).size() <= 0) {
+			if (SosUtil.supportedResponseFormats(sensorOffering).size() <= 0) {
 				// update stack
 				showPreviewPlotStack(PlotPreviewStack.UNSUPPORTED_FORMAT);
 				return;
 			}
 
 			List<String> properties = sensorOffering.getObservedProperties();
-
-			List<String> labels = new ArrayList<String>();
-
+			List<String> labels = new ArrayList<>();
+			// create labels for observed properties 
 			for (String property : properties) {
 				String label = Labeling.labelProperty(property);
-
 				labels.add(label);
-
 				// save the URI as data on the widget
 				comboObservedProperties.setData(label, property);
 			}
+			
 			// set the combo box values
-			comboObservedProperties.setItems(labels.toArray(new String[labels
-					.size()]));
+			comboObservedProperties.setItems(labels.toArray(
+					new String[labels.size()]));
 
-			// select the first one
+			// select an observed property
 			if (labels.size() > 0) {
 				// update label
 				lblObservedProperties.setText(labels.size()
-						+ " observed properties");
+						+ " observed " + (labels.size() == 1 ? 
+								"property" : "properties"));
 				// enable combo box
 				comboObservedProperties.setEnabled(true);
-				// select first item
-				comboObservedProperties.select(0);
-				// prepare for preview
-				prepareForPreview();
+				// select item - see if we remember a setting 
+				String previousProperty = 
+						dataPreviewSelectionModel.getSelectedObservedProperty(
+								sensorOffering.getGmlId());
+				if (previousProperty != null) {
+					String lblPrevProperty = Labeling.labelProperty(previousProperty);
+					int idx = comboObservedProperties.indexOf(lblPrevProperty);
+					comboObservedProperties.select(idx >= 0 ? idx : 0);
+				} else {
+					comboObservedProperties.select(0);
+				}
+				
+				// automatically prepare for preview
+				datePreviewUpdateDataVariables(getSensorOfferingSelection());
+				
 			} else {
 				// update label
 				lblObservedProperties.setText(strNoObservedProperties);
@@ -4266,62 +4374,54 @@ public class QuerySetPart {
 	 */
 	private void previewSensorData() {
 
-		// // show plot view
-		// try {
-		// PlatformUI.getWorkbench().getActiveWorkbenchWindow().
-		// getActivePage().showView(DataPreviewView.ID);
-		// } catch (PartInitException exception) {
-		// log.error("Part init exception: " + exception.getMessage());
-		// }
-		//
-		// final Collection<Field> rangeVariables = new ArrayList<Field>();
-		// for (Object obj : tableViewerRangeVariables.getCheckedElements()) {
-		// if (obj instanceof String)
-		// rangeVariables.add(new Field((String) obj));
-		// }
-		//
-		// final Field domain =
-		// new Field(comboPlotTimeSeriesDomain.getText());
-		//
-		// final SensorOfferingItem offeringItem = getSensorOfferingSelection();
-		//
-		// // validate
-		// if (offeringItem != null &&
-		// rangeVariables.size() > 0 &&
-		// !domain.getName().equals(""))
-		// {
-		//
-		// // get observed property
-		// String property = comboObservedProperties.getText();
-		// final String observedProperty =
-		// (String)comboObservedProperties.getData(property);
-		//
-		// Job job = new Job("Updating preview") {
-		//
-		// @Override
-		// protected IStatus run(IProgressMonitor monitor) {
-		//
-		// try {
-		//
-		// monitor.beginTask("Updating preview",
-		// IProgressMonitor.UNKNOWN);
-		//
-		// /*
-		// * Preview the data
-		// */
-		// previewData(offeringItem, observedProperty,
-		// domain, rangeVariables);
-		//
-		// } finally {
-		// monitor.done();
-		// }
-		//
-		// return org.eclipse.core.runtime.Status.OK_STATUS;
-		// }
-		// };
-		// job.setUser(true);
-		// job.schedule();
-		// }
+		final Collection<Field> rangeVariables = new ArrayList<Field>();
+		for (Object obj : tableViewerRangeVariables.getCheckedElements()) {
+			if (obj instanceof String)
+				rangeVariables.add(new Field((String) obj));
+		}
+
+		final Field domain =
+				new Field(comboPlotTimeSeriesDomain.getText());
+
+		final SosSensorOffering offeringItem = getSensorOfferingSelection();
+
+		// validate
+		if (offeringItem != null &&
+				rangeVariables.size() > 0 &&
+				!domain.getName().equals(""))
+		{
+
+			// get observed property
+			String property = comboObservedProperties.getText();
+			final String observedProperty =
+					(String)comboObservedProperties.getData(property);
+
+			Job job = new Job("Updating preview") {
+
+				@Override
+				protected IStatus run(IProgressMonitor monitor) {
+
+					try {
+
+						monitor.beginTask("Updating preview",
+								IProgressMonitor.UNKNOWN);
+
+						/*
+						 * Preview the data
+						 */
+						previewData(offeringItem, observedProperty,
+								domain, rangeVariables);
+
+					} finally {
+						monitor.done();
+					}
+
+					return org.eclipse.core.runtime.Status.OK_STATUS;
+				}
+			};
+			job.setUser(true);
+			job.schedule();
+		}
 	}
 
 	/**
